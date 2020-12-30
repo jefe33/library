@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
+#define MAX 50
 struct ksiazki {
     long long nr_isbn;
     int nr_katalogowy, dostepnosc;
-    char *autor, *nazwa, *kategoria, *data_wydania, *wydawnictwo;
+    char autor[MAX], tytul[MAX], kategoria[MAX], data_wydania[MAX], wydawnictwo[MAX];
     struct ksiazki *next;
     struct ksiazki *prev;
 };
@@ -15,15 +18,26 @@ struct klient {
     struct ksiazki *wypozyczone;
 };
 
+int is_empty(const char *s) {
+    while (*s != '\0') {
+        if (!isspace((unsigned char) *s))
+            return 0;
+        s++;
+    }
+    return 1;
+}
+
 void wyswietlMenu();
 
 void wyswietlMenuKsiazek();
 
 void wyswietlMenuKlientow();
 
+void dodajKsiazke();
+
 int main() {
-    //wyswietlMenu();
-    struct ksiazki *ks1 = malloc(sizeof(struct ksiazki));
+    wyswietlMenu();
+    /*struct ksiazki *ks1 = malloc(sizeof(struct ksiazki));
     ks1->nr_katalogowy = 2137;
     ks1->nr_isbn = 666696964202137;
     ks1->dostepnosc = 5;
@@ -40,7 +54,7 @@ int main() {
     k1->imie = "Zdzisio";
     k1->nazwisko = "Brzeczeszczykiewicz";
     k1->wypozyczone = ks1;
-    printf("%s", k1->wypozyczone->data_wydania);
+    printf("%s", k1->wypozyczone->data_wydania);*/
     return 0;
 }
 
@@ -48,7 +62,7 @@ void wyswietlMenu() {
     printf("1. Menu ksiazek\n");
     printf("2. Menu klientow\n");
     printf("0. Wyjscie z programu\n");
-    int x;
+    int x, err = 0;
     scanf("%d", &x);
     do {
         if (x == 1) {
@@ -57,8 +71,10 @@ void wyswietlMenu() {
             wyswietlMenuKlientow();
         } else if (x == 0) {
             break;
+        } else {
+            err = 1;
         }
-    } while (x != 0);
+    } while (err);
 }
 
 void wyswietlMenuKsiazek() {
@@ -75,28 +91,67 @@ void wyswietlMenuKsiazek() {
     for (int i = 0; i < 7; ++i) {
         printf("%i. %s", i, menu[i]);
     }
-    int x, end = 0;
+    int x;
     scanf("%d", &x);
-    while (!end) {
-        switch (x) {
-            case 0:
-                end = 1;
-                break;
-            case 4:
-
-                break;
-        }
+    //while (!end) {
+    switch (x) {
+        case 0:
+            wyswietlMenu();
+            break;
+        case 4:
+            dodajKsiazke();
+            break;
     }
+    //}
 }
 
 void wyswietlMenuKlientow() {
-    char menu[][100] = {"wyswietl klientow posortowanych alfabetycznie\n",
-                        "wyswietl klientow posortowanych wzgledem wypozyczonych ksiazek\n",
-                        "dodaj klienta\n",
-                        "edytuj klienta\n",
-                        "usun klienta\n",
+    char menu[][70] = {"wyswietl klientow posortowanych alfabetycznie\n",
+                       "wyswietl klientow posortowanych wzgledem wypozyczonych ksiazek\n",
+                       "dodaj klienta\n",
+                       "edytuj klienta\n",
+                       "usun klienta\n",
     };
     for (int i = 0; i < 5; ++i) {
         printf("%i. %s", i + 1, menu[i]);
     }
+}
+
+char *wczytajKsiazka(char *s) {
+    char *z = malloc(MAX * sizeof(char));
+    do {
+        printf("%s\n", s);
+        fgets(z, MAX, stdin);
+    } while (is_empty(z));
+    return z;
+}
+
+void dodajKsiazke() {
+    long long x;
+    struct ksiazki *k1 = malloc(sizeof(struct ksiazki));
+    k1->nr_katalogowy = 1;
+    k1->dostepnosc = 1;
+    getchar();
+    strcpy(k1->tytul, wczytajKsiazka("Podaj tytul ksiazki"));
+    strcpy(k1->autor, wczytajKsiazka("Podaj autora ksiazki"));
+    strcpy(k1->kategoria, wczytajKsiazka("Podaj kategorie ksiazki"));
+    strcpy(k1->data_wydania, wczytajKsiazka("Podaj date wydania w formacie DD-MM-RRRR"));
+    strcpy(k1->wydawnictwo, wczytajKsiazka("Podaj wydawnictwo ksiazki"));
+
+    do {
+        printf("Podaj 13-nasto cyfrowy numer ISBN\n");
+        scanf("%lld", &x);
+    } while (x < 1000000000000 || x > 10000000000000);
+    k1->nr_isbn = x;
+    /*printf("%i %s %s %s %s %s %lld %i", k1->nr_katalogowy, k1->autor, k1->tytul, k1->kategoria, k1->wydawnictwo,
+           k1->data_wydania, k1->nr_isbn, k1->dostepnosc);*/
+    FILE *f = fopen("../pliki/ksiazki.txt", "a");
+    fprintf(f, "%d\n", k1->nr_katalogowy);
+    fputs(k1->autor, f);
+    fputs(k1->tytul, f);
+    fputs(k1->kategoria, f);
+    fputs(k1->wydawnictwo, f);
+    fputs(k1->data_wydania, f);
+    fprintf(f, "%lld", k1->nr_isbn);
+    fprintf(f, "\n%d", k1->dostepnosc);
 }
