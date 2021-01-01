@@ -1,3 +1,5 @@
 C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug/CMakeFiles/Projekt.dir
+C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug/CMakeFiles/losoweKsiazki.dir
+C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug/CMakeFiles/ksiazki.dir
 C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug/CMakeFiles/edit_cache.dir
 C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug/CMakeFiles/rebuild_cache.dir
