@@ -142,32 +142,6 @@ Projekt/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Projekt.dir\build.make CMakeFiles/Projekt.dir/build
 .PHONY : Projekt/fast
 
-#=============================================================================
-# Target rules for targets named losoweKsiazki
-
-# Build rule for target.
-losoweKsiazki: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 losoweKsiazki
-.PHONY : losoweKsiazki
-
-# fast build rule for target.
-losoweKsiazki/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\losoweKsiazki.dir\build.make CMakeFiles/losoweKsiazki.dir/build
-.PHONY : losoweKsiazki/fast
-
-#=============================================================================
-# Target rules for targets named ksiazki
-
-# Build rule for target.
-ksiazki: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 ksiazki
-.PHONY : ksiazki
-
-# fast build rule for target.
-ksiazki/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\ksiazki.dir\build.make CMakeFiles/ksiazki.dir/build
-.PHONY : ksiazki/fast
-
 index.obj: index.c.obj
 
 .PHONY : index.obj
@@ -204,8 +178,6 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... Projekt
-	@echo ... ksiazki
-	@echo ... losoweKsiazki
 	@echo ... index.obj
 	@echo ... index.i
 	@echo ... index.s

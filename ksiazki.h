@@ -43,6 +43,7 @@ char *wczytajKsiazka(char *s) {
     return z;
 }
 
+
 struct ksiazki *utworzKsiazke() {
     long long x;
     getchar();
@@ -60,6 +61,46 @@ struct ksiazki *utworzKsiazke() {
     } while (x < 1000000000000 || x > 9999999999999);
     ksiazka->nr_isbn = x;
     return ksiazka;
+}
+
+void wyswietlWedlugAutora() {
+    FILE *f = fopen("../pliki/ksiazki.txt", "r");
+    char ch[MAX];
+    int x, z;
+    long long y;
+    if (f != NULL) {
+        printf("-----------------------------------------------------------------------------------------------------------------------\n");
+        printf("|nr |         autor        |          tytul          |    kategoria     | wydawnictwo |data_wydania|nr_ISBN|dostepnosc|\n");
+        printf("-----------------------------------------------------------------------------------------------------------------------\n");
+        while (!feof(f)) {
+            fscanf(f, "%i", &x);
+            printf("|%-3i|", x);
+            fscanf(f, "%i", &x);
+            fscanf(f, "%lld", &y);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-10s ", ch);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-10s |", ch);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-24s |", ch);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-17s |", ch);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-12s |", ch);
+            fgets(ch, MAX, f);
+            ch[strlen(ch) - 1] = '\0';
+            printf("%-10s |", ch);
+            printf(" %lld |", y);
+            printf(" %i |\n", x);
+
+
+        }
+    }
 }
 
 void dodajKsiazke(int n) {
@@ -83,6 +124,7 @@ void dodajKsiazke(int n) {
             fseek(f, 0, SEEK_SET);
             struct ksiazki *k = malloc(sizeof(struct ksiazki));
             while (!feof(f)) {
+                k = realloc(k, (i++ + 1) * sizeof(struct ksiazki));
                 fscanf(f, "%i", &k[i].nr_katalogowy);
                 fscanf(f, "%i", &k[i].dostepnosc);
                 fscanf(f, "%lld", &k[i].nr_isbn);
@@ -93,7 +135,6 @@ void dodajKsiazke(int n) {
                 fgets(k[i].wydawnictwo, MAX, f);
                 fgets(k[i].data_wydania, MAX, f);
                 k[i].data_wydania[strlen(k[i].data_wydania) - 1] = '\0';
-                k = realloc(k, (++i + 1) * sizeof(struct ksiazki));
             }
             k1->nr_katalogowy = i + 1;
             for (j = 0; j < i; ++j) {
@@ -113,7 +154,7 @@ void dodajKsiazke(int n) {
                             k1->wydawnictwo, k1->data_wydania);
                 }
                 if (m != 0) fprintf(f, "\n");
-                fprintf(f, "%i %i %lld%s%s%s%s%s%s", k[m].nr_katalogowy, k[m].dostepnosc, k1->nr_isbn,
+                fprintf(f, "%i %i %lld%s%s%s%s%s%s", k[m].nr_katalogowy, k[m].dostepnosc, k[m].nr_isbn,
                         k[m].autor_nazwisko,
                         k[m].autor_imie,
                         k[m].tytul, k[m].kategoria,
@@ -127,8 +168,10 @@ void dodajKsiazke(int n) {
                         k1->tytul, k1->kategoria,
                         k1->wydawnictwo, k1->data_wydania);
             }
+            free(k);
         }
     }
+    free(k1);
     fclose(f);
 }
 
@@ -137,23 +180,27 @@ struct ksiazki *losowaKsiazka() {
     struct ksiazki *ksiazka = malloc(sizeof(struct ksiazki));
     char imie[13][MAX] = {"Jane", "Emily", "George", "Philip", "Charles", "Thomas", "Jan", "Pawel", "Joseph",
                           "Margaret", "Dan", "Leo", "Arthur"};
-    char nazwisko[12][MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell", "Brown",
+    char nazwisko[12][MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell",
+                              "Brown",
                               "Golding", "Huxley", "Conan Doyle"};
-    char tytul[16][MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
+    char tytul[15][MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
                            "Folwark zwierzecy", "Kod Da Vinci", "Wladca much", "W drodze", "Moby Dick", "Germinal",
-                           "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance", "Przygody Scherlocka Holmesa"};
+                           "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
     char kategoria[13][MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
                                "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
-    char data_wydania[12][MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003", "01-01-1959",
-                                  "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020", "09-08-1856"};
-    char wydawnictwo[13][MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era", "W drodze",
+    char data_wydania[12][MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
+                                  "01-01-1959",
+                                  "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
+                                  "09-08-1856"};
+    char wydawnictwo[13][MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
+                                 "W drodze",
                                  "SBM", "ISA", "Kos", "Bosz"};
     long long isbn[12] = {2005917850652, 7137334183392, 1460338048199, 1771121865414, 3827938534880, 7527675674564,
                           2728983381469, 4113757760531, 5191182644763, 5881868774856, 9613158509137, 5320278067692};
     ksiazka->dostepnosc = 1;
     strcpy(ksiazka->autor_nazwisko, &nazwisko[rand() % 12][MAX]);
     strcpy(ksiazka->autor_imie, &imie[rand() % 13][MAX]);
-    strcpy(ksiazka->tytul, &tytul[rand() % 16][MAX]);
+    strcpy(ksiazka->tytul, &tytul[rand() % 15][MAX]);
     strcpy(ksiazka->kategoria, &kategoria[rand() % 13][MAX]);
     strcpy(ksiazka->data_wydania, &data_wydania[rand() % 12][MAX]);
     strcpy(ksiazka->wydawnictwo, &wydawnictwo[rand() % 13][MAX]);

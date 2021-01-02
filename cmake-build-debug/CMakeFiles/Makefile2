@@ -73,8 +73,6 @@ CMAKE_BINARY_DIR = "C:\Users\user\Desktop\programy\programy c\Projekt\cmake-buil
 
 # The main recursive "all" target.
 all: CMakeFiles/Projekt.dir/all
-all: CMakeFiles/losoweKsiazki.dir/all
-all: CMakeFiles/ksiazki.dir/all
 
 .PHONY : all
 
@@ -85,8 +83,6 @@ preinstall:
 
 # The main recursive "clean" target.
 clean: CMakeFiles/Projekt.dir/clean
-clean: CMakeFiles/losoweKsiazki.dir/clean
-clean: CMakeFiles/ksiazki.dir/clean
 
 .PHONY : clean
 
@@ -116,60 +112,6 @@ Projekt: CMakeFiles/Projekt.dir/rule
 CMakeFiles/Projekt.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Projekt.dir\build.make CMakeFiles/Projekt.dir/clean
 .PHONY : CMakeFiles/Projekt.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/losoweKsiazki.dir
-
-# All Build rule for target.
-CMakeFiles/losoweKsiazki.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\losoweKsiazki.dir\build.make CMakeFiles/losoweKsiazki.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\losoweKsiazki.dir\build.make CMakeFiles/losoweKsiazki.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" --progress-num= "Built target losoweKsiazki"
-.PHONY : CMakeFiles/losoweKsiazki.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/losoweKsiazki.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" 0
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/losoweKsiazki.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" 0
-.PHONY : CMakeFiles/losoweKsiazki.dir/rule
-
-# Convenience name for target.
-losoweKsiazki: CMakeFiles/losoweKsiazki.dir/rule
-
-.PHONY : losoweKsiazki
-
-# clean rule for target.
-CMakeFiles/losoweKsiazki.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\losoweKsiazki.dir\build.make CMakeFiles/losoweKsiazki.dir/clean
-.PHONY : CMakeFiles/losoweKsiazki.dir/clean
-
-#=============================================================================
-# Target rules for target CMakeFiles/ksiazki.dir
-
-# All Build rule for target.
-CMakeFiles/ksiazki.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\ksiazki.dir\build.make CMakeFiles/ksiazki.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\ksiazki.dir\build.make CMakeFiles/ksiazki.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir="C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" --progress-num= "Built target ksiazki"
-.PHONY : CMakeFiles/ksiazki.dir/all
-
-# Build rule for subdir invocation for target.
-CMakeFiles/ksiazki.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" 0
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CMakeFiles/ksiazki.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start "C:\Users\user\Desktop\programy\programy c\Projekt\cmake-build-debug\CMakeFiles" 0
-.PHONY : CMakeFiles/ksiazki.dir/rule
-
-# Convenience name for target.
-ksiazki: CMakeFiles/ksiazki.dir/rule
-
-.PHONY : ksiazki
-
-# clean rule for target.
-CMakeFiles/ksiazki.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\ksiazki.dir\build.make CMakeFiles/ksiazki.dir/clean
-.PHONY : CMakeFiles/ksiazki.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

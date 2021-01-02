@@ -56,6 +56,9 @@ void wyswietlMenuKsiazek() {
             case 0:
                 wyswietlMenu();
                 break;
+            case 1:
+                wyswietlWedlugAutora();
+                break;
             case 4:
                 dodajKsiazke(0);
                 break;
