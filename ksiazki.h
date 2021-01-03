@@ -14,6 +14,30 @@ struct ksiazki {
 
 struct ksiazki *losowaKsiazka();
 
+struct ksiazki *ReadBooks(FILE *in_stream) {
+    struct ksiazki head;
+    head.next = NULL; // code only uses the `next` field of head
+
+    struct ksiazki *previous = &head;
+    struct ksiazki x;
+
+    // While another record was successfully read ...
+    while (fread(&x, sizeof(struct ksiazki), 1, in_stream) == 1) {
+        printf(" 3");
+        // Fill the next field
+        x.next = NULL;
+
+        // Allocate space and copy
+        previous->next = malloc(sizeof *(previous->next));
+        //assert(previous->next);
+        *(previous->next) = x;
+
+        // Advance to the next
+        previous = previous->next;
+    }
+    return head.next;
+}
+
 int is_empty(char *s) {
     while (*s != '\0') {
         if (!isspace((unsigned char) *s))
@@ -21,6 +45,10 @@ int is_empty(char *s) {
         s++;
     }
     return 1;
+}
+
+void clear() {
+    while (getchar() != '\n');
 }
 
 char *wczytajString() {
@@ -66,7 +94,7 @@ struct ksiazki *utworzKsiazke() {
 void wyswietlWedlugAutora() {
     FILE *f = fopen("../pliki/ksiazki.txt", "r");
     char ch[MAX];
-    int x, z;
+    int x;
     long long y;
     if (f != NULL) {
         printf("-----------------------------------------------------------------------------------------------------------------------\n");
@@ -104,23 +132,39 @@ void wyswietlWedlugAutora() {
 }
 
 void dodajKsiazke(int n) {
+    char *sciezka = "../pliki/ksiazki.bin";
     struct ksiazki *k1;
     if (n) {
         k1 = losowaKsiazka();
     } else {
         k1 = utworzKsiazke();
     }
-    FILE *f = fopen("../pliki/ksiazki.txt", "r");
+    FILE *f = fopen(sciezka, "rb");
     int i = 0, j, m = 0;
-    if (f != NULL) {
+    if (f) {
         fseek(f, 0, SEEK_END);
-        if (ftell(f) == 0) {
-            fprintf(f, "%i %i %lld%s\n%s\n%s\n%s\n%s\n%s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
+        if (ftell(f) != 0) {
+            /*fclose(f);
+            f = fopen(sciezka, "wb");*/
+            struct ksiazki *k2 = ReadBooks(f);
+            printf(" %p ", k2);
+            printf("\n%i %i %lld %s %s %s %s %s %s", k2->nr_katalogowy, k2->dostepnosc, k2->nr_isbn,
+                   k2->autor_nazwisko, k2->autor_imie, k2->tytul, k2->kategoria, k2->wydawnictwo, k2->data_wydania);
+            free(k2);
+            fclose(f);
+            /*fprintf(f, "%i %i %lld%s\n%s\n%s\n%s\n%s\n%s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
                     k1->autor_nazwisko,
                     k1->autor_imie,
                     k1->tytul, k1->kategoria,
-                    k1->wydawnictwo, k1->data_wydania);
+                    k1->wydawnictwo, k1->data_wydania);*/
         } else {
+            fclose(f);
+            f = fopen(sciezka, "wb");
+            fwrite(k1, sizeof(struct ksiazki), 1, f);
+            printf("\n%i %i %lld %s %s %s %s %s %s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
+                   k1->autor_nazwisko, k1->autor_imie, k1->tytul, k1->kategoria, k1->wydawnictwo, k1->data_wydania);
+            fclose(f);
+            /*
             fseek(f, 0, SEEK_SET);
             struct ksiazki *k = malloc(sizeof(struct ksiazki));
             while (!feof(f)) {
@@ -168,8 +212,17 @@ void dodajKsiazke(int n) {
                         k1->tytul, k1->kategoria,
                         k1->wydawnictwo, k1->data_wydania);
             }
-            free(k);
+            free(k);*/
         }
+    } else {
+        fclose(f);
+        f = fopen(sciezka, "wb");
+        fwrite(k1, sizeof(struct ksiazki), 1, f);
+        struct ksiazki *k2 = malloc(sizeof(struct ksiazki));
+        fread(k2, sizeof(struct ksiazki), 1, f);
+        printf("\n%i %i %lld %s %s %s %s %s %s", k2->nr_katalogowy, k2->dostepnosc, k2->nr_isbn,
+               k2->autor_nazwisko, k2->autor_imie, k2->tytul, k2->kategoria, k2->wydawnictwo, k2->data_wydania);
+        free(k2);
     }
     free(k1);
     fclose(f);
@@ -178,32 +231,34 @@ void dodajKsiazke(int n) {
 struct ksiazki *losowaKsiazka() {
     srand(time(0));
     struct ksiazki *ksiazka = malloc(sizeof(struct ksiazki));
-    char imie[13][MAX] = {"Jane", "Emily", "George", "Philip", "Charles", "Thomas", "Jan", "Pawel", "Joseph",
-                          "Margaret", "Dan", "Leo", "Arthur"};
-    char nazwisko[12][MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell",
-                              "Brown",
-                              "Golding", "Huxley", "Conan Doyle"};
-    char tytul[15][MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
-                           "Folwark zwierzecy", "Kod Da Vinci", "Wladca much", "W drodze", "Moby Dick", "Germinal",
-                           "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
-    char kategoria[13][MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
-                               "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
-    char data_wydania[12][MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
-                                  "01-01-1959",
-                                  "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
-                                  "09-08-1856"};
-    char wydawnictwo[13][MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
-                                 "W drodze",
-                                 "SBM", "ISA", "Kos", "Bosz"};
+    char *imie[MAX] = {"Jane", "Emily", "George", "Philip", "Charles", "Thomas", "Jan", "Pawel", "Joseph",
+                       "Margaret", "Dan", "Leo", "Arthur"};
+    char *nazwisko[MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell",
+                           "Brown", "Golding", "Huxley", "Conan Doyle"};
+    char *tytul[MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
+                        "Folwark zwierzecy", "Kod Da Vinci", "Wladca much", "W drodze", "Moby Dick", "Germinal",
+                        "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
+    char *kategoria[MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
+                            "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
+    char *data_wydania[MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
+                               "01-01-1959", "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
+                               "09-08-1856"};
+    char *wydawnictwo[MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
+                              "W drodze", "SBM", "ISA", "Kos", "Bosz"};
     long long isbn[12] = {2005917850652, 7137334183392, 1460338048199, 1771121865414, 3827938534880, 7527675674564,
                           2728983381469, 4113757760531, 5191182644763, 5881868774856, 9613158509137, 5320278067692};
     ksiazka->dostepnosc = 1;
-    strcpy(ksiazka->autor_nazwisko, &nazwisko[rand() % 12][MAX]);
-    strcpy(ksiazka->autor_imie, &imie[rand() % 13][MAX]);
-    strcpy(ksiazka->tytul, &tytul[rand() % 15][MAX]);
-    strcpy(ksiazka->kategoria, &kategoria[rand() % 13][MAX]);
-    strcpy(ksiazka->data_wydania, &data_wydania[rand() % 12][MAX]);
-    strcpy(ksiazka->wydawnictwo, &wydawnictwo[rand() % 13][MAX]);
+    strcpy(ksiazka->autor_nazwisko, nazwisko[rand() % 12]);
+    strcpy(ksiazka->autor_imie, imie[rand() % 13]);
+    strcpy(ksiazka->tytul, tytul[rand() % 15]);
+    strcpy(ksiazka->kategoria, kategoria[rand() % 12]);
+    strcpy(ksiazka->data_wydania, data_wydania[rand() % 12]);
+    strcpy(ksiazka->wydawnictwo, wydawnictwo[rand() % 13]);
     ksiazka->nr_isbn = isbn[rand() % 12];
+    ksiazka->next = NULL;
+    ksiazka->nr_katalogowy = 1;
+    /*printf("\n%i %i %lld %s %s %s %s %s %s", ksiazka->nr_katalogowy, ksiazka->dostepnosc, ksiazka->nr_isbn,
+           ksiazka->autor_nazwisko, ksiazka->autor_imie, ksiazka->tytul, ksiazka->kategoria, ksiazka->wydawnictwo,
+           ksiazka->data_wydania);*/
     return ksiazka;
 }
