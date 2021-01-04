@@ -23,7 +23,6 @@ struct ksiazki *ReadBooks(FILE *in_stream) {
 
     // While another record was successfully read ...
     while (fread(&x, sizeof(struct ksiazki), 1, in_stream) == 1) {
-        printf(" 3");
         // Fill the next field
         x.next = NULL;
 
@@ -45,6 +44,16 @@ int is_empty(char *s) {
         s++;
     }
     return 1;
+}
+
+void uwolnicBarabasza(struct ksiazki *t) {
+    struct ksiazki *tmp;
+    while (t) {
+        tmp = t;
+        t = t->next;
+        free(tmp);
+    }
+    free(t);
 }
 
 void clear() {
@@ -88,6 +97,11 @@ struct ksiazki *utworzKsiazke() {
         scanf("%lld", &x);
     } while (x < 1000000000000 || x > 9999999999999);
     ksiazka->nr_isbn = x;
+    int y;
+    FILE *f2 = fopen("../pliki/dane.txt", "r");
+    fscanf(f2, "nr_katalogowy:%i", &y);
+    ksiazka->nr_katalogowy = y + 1;
+    fclose(f2);
     return ksiazka;
 }
 
@@ -131,40 +145,71 @@ void wyswietlWedlugAutora() {
     }
 }
 
+struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks) {
+    if (strcmp(l->autor_nazwisko, ks->autor_nazwisko) > 0) {
+        ks->next = l;
+        l = ks;
+        return l;
+    }
+    struct ksiazki *tmp = l;
+    while (tmp) {
+        if (tmp->next == NULL) {
+            tmp->next = ks;
+            break;
+        } else {
+            if (tmp->next && strcmp(tmp->next->autor_nazwisko, ks->autor_nazwisko) > 0) {
+                ks->next = tmp->next;
+                tmp->next = ks;
+                break;
+            }
+        }
+        tmp = tmp->next;
+    }
+    return l;
+}
+
 void dodajKsiazke(int n) {
-    char *sciezka = "../pliki/ksiazki.bin";
+    char *Pksiazki = "../pliki/ksiazki.bin";
+    char *dane = "../pliki/dane.txt";
     struct ksiazki *k1;
     if (n) {
         k1 = losowaKsiazka();
     } else {
         k1 = utworzKsiazke();
     }
-    FILE *f = fopen(sciezka, "rb");
-    int i = 0, j, m = 0;
+    FILE *f = fopen(Pksiazki, "rb+");
+    FILE *f2 = fopen(dane, "r");
     if (f) {
         fseek(f, 0, SEEK_END);
         if (ftell(f) != 0) {
-            /*fclose(f);
-            f = fopen(sciezka, "wb");*/
+            rewind(f);
             struct ksiazki *k2 = ReadBooks(f);
-            printf(" %p ", k2);
-            printf("\n%i %i %lld %s %s %s %s %s %s", k2->nr_katalogowy, k2->dostepnosc, k2->nr_isbn,
-                   k2->autor_nazwisko, k2->autor_imie, k2->tytul, k2->kategoria, k2->wydawnictwo, k2->data_wydania);
-            free(k2);
+            k2 = wstawPosortowane(k2, k1);
             fclose(f);
-            /*fprintf(f, "%i %i %lld%s\n%s\n%s\n%s\n%s\n%s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
-                    k1->autor_nazwisko,
-                    k1->autor_imie,
-                    k1->tytul, k1->kategoria,
-                    k1->wydawnictwo, k1->data_wydania);*/
+            f = fopen(Pksiazki, "wb");
+            struct ksiazki *tmp = k2;
+            while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+                printf("%i %i %lld %s %s %s %s %s %s\n", tmp->nr_katalogowy, tmp->dostepnosc, tmp->nr_isbn,
+                       tmp->autor_nazwisko, tmp->autor_imie, tmp->tytul, tmp->kategoria, tmp->wydawnictwo,
+                       tmp->data_wydania);
+                tmp = tmp->next;
+            }
+            int x;
+            fscanf(f2, "nr_katalogowy:%i", &x);
+            fclose(f2);
+            f2 = fopen(dane, "w");
+            fprintf(f2, "nr_katalogowy:%i", x + 1);
+            uwolnicBarabasza(k2);
         } else {
             fclose(f);
-            f = fopen(sciezka, "wb");
-            fwrite(k1, sizeof(struct ksiazki), 1, f);
-            printf("\n%i %i %lld %s %s %s %s %s %s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
+            f = fopen(Pksiazki, "wb");
+            if (fwrite(k1, sizeof(struct ksiazki), 1, f) == 1) {
+                fclose(f2);
+                f2 = fopen(dane, "w");
+                fprintf(f2, "nr_katalogowy:%i", 1);
+            }
+            /*printf("\n%i %i %lld %s %s %s %s %s %s\n", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
                    k1->autor_nazwisko, k1->autor_imie, k1->tytul, k1->kategoria, k1->wydawnictwo, k1->data_wydania);
-            fclose(f);
-            /*
             fseek(f, 0, SEEK_SET);
             struct ksiazki *k = malloc(sizeof(struct ksiazki));
             while (!feof(f)) {
@@ -216,16 +261,16 @@ void dodajKsiazke(int n) {
         }
     } else {
         fclose(f);
-        f = fopen(sciezka, "wb");
-        fwrite(k1, sizeof(struct ksiazki), 1, f);
-        struct ksiazki *k2 = malloc(sizeof(struct ksiazki));
-        fread(k2, sizeof(struct ksiazki), 1, f);
-        printf("\n%i %i %lld %s %s %s %s %s %s", k2->nr_katalogowy, k2->dostepnosc, k2->nr_isbn,
-               k2->autor_nazwisko, k2->autor_imie, k2->tytul, k2->kategoria, k2->wydawnictwo, k2->data_wydania);
-        free(k2);
+        f = fopen(Pksiazki, "wb");
+        if (fwrite(k1, sizeof(struct ksiazki), 1, f) == 1) {
+            fclose(f2);
+            f2 = fopen(dane, "w");
+            fprintf(f2, "nr_katalogowy:%i", 1);
+        }
     }
     free(k1);
     fclose(f);
+    fclose(f2);
 }
 
 struct ksiazki *losowaKsiazka() {
@@ -256,9 +301,10 @@ struct ksiazki *losowaKsiazka() {
     strcpy(ksiazka->wydawnictwo, wydawnictwo[rand() % 13]);
     ksiazka->nr_isbn = isbn[rand() % 12];
     ksiazka->next = NULL;
-    ksiazka->nr_katalogowy = 1;
-    /*printf("\n%i %i %lld %s %s %s %s %s %s", ksiazka->nr_katalogowy, ksiazka->dostepnosc, ksiazka->nr_isbn,
-           ksiazka->autor_nazwisko, ksiazka->autor_imie, ksiazka->tytul, ksiazka->kategoria, ksiazka->wydawnictwo,
-           ksiazka->data_wydania);*/
+    int x;
+    FILE *f2 = fopen("../pliki/dane.txt", "r");
+    fscanf(f2, "nr_katalogowy:%i", &x);
+    ksiazka->nr_katalogowy = x + 1;
+    fclose(f2);
     return ksiazka;
 }

@@ -47,7 +47,7 @@ void wyswietlMenuKsiazek() {
                         "dodaj losowe dane\n",
     };
     int x;
-    //do {
+    do {
         for (int i = 0; i < 9; ++i) {
             printf("%i. %s", i, menu[i]);
         }
@@ -69,7 +69,7 @@ void wyswietlMenuKsiazek() {
                 wyswietlMenu();
                 break;
         }
-   // } while (x != 0);
+    } while (x != 0);
 }
 
 
