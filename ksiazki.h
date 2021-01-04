@@ -6,7 +6,7 @@
 
 #define MAX 50
 struct ksiazki {
-    long long nr_isbn;
+    unsigned int nr_isbn[13];
     int nr_katalogowy, dostepnosc;
     char autor_nazwisko[MAX], autor_imie[MAX], tytul[MAX], kategoria[MAX], data_wydania[MAX], wydawnictwo[MAX];
     struct ksiazki *next;
@@ -61,13 +61,13 @@ void clear() {
 }
 
 char *wczytajString() {
-    char *s = malloc(sizeof(char)), c;
+    char *s = malloc(MAX * sizeof(char)), c;
     int i = 0;
-    while ((c = getchar()) != '\n') {
-        s[i] = c;
-        s = realloc(s, ++i * sizeof(char));
+    while ((c = getchar()) != '\n' || i + 1 == MAX) {
+        s[i++] = c;
     }
     s[i] = '\0';
+    s = realloc(s, i * sizeof(char));
     return s;
 }
 
@@ -80,10 +80,22 @@ char *wczytajKsiazka(char *s) {
     return z;
 }
 
+int is_positive_number(char *s, int len) {
+    for (int i = 0; i < len; i++) {
+        if (!isdigit(s[i])) {
+            return 0;
+        }
+        if (s[i] < 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 struct ksiazki *utworzKsiazke() {
-    long long x;
-    getchar();
+    char z[13];
+    int len, y, i;
+    clear();
     struct ksiazki *ksiazka = malloc(sizeof(struct ksiazki));
     strcpy(ksiazka->tytul, wczytajKsiazka("Podaj tytul ksiazki"));
     strcpy(ksiazka->autor_nazwisko, wczytajKsiazka("Podaj nazwisko autora ksiazki"));
@@ -94,10 +106,12 @@ struct ksiazki *utworzKsiazke() {
     ksiazka->dostepnosc = 1;
     do {
         printf("Podaj 13-nasto cyfrowy numer ISBN\n");
-        scanf("%lld", &x);
-    } while (x < 1000000000000 || x > 9999999999999);
-    ksiazka->nr_isbn = x;
-    int y;
+        scanf("%s", z);
+        len = strlen(z);
+    } while (len != 13 || !is_positive_number(z, len));
+    for (i = 0; i < 13; ++i) {
+        ksiazka->nr_isbn[i] = z[i] - '0';
+    }
     FILE *f2 = fopen("../pliki/dane.txt", "r");
     fscanf(f2, "nr_katalogowy:%i", &y);
     ksiazka->nr_katalogowy = y + 1;
@@ -106,43 +120,30 @@ struct ksiazki *utworzKsiazke() {
 }
 
 void wyswietlWedlugAutora() {
-    FILE *f = fopen("../pliki/ksiazki.txt", "r");
-    char ch[MAX];
-    int x;
-    long long y;
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     if (f != NULL) {
         printf("-----------------------------------------------------------------------------------------------------------------------\n");
-        printf("|nr |         autor        |          tytul          |    kategoria     | wydawnictwo |data_wydania|nr_ISBN|dostepnosc|\n");
+        printf("|nr |         autor       |          tytul           |    kategoria     | wydawnictwo |data_wydania|nr_ISBN|dostepnosc|\n");
         printf("-----------------------------------------------------------------------------------------------------------------------\n");
-        while (!feof(f)) {
-            fscanf(f, "%i", &x);
-            printf("|%-3i|", x);
-            fscanf(f, "%i", &x);
-            fscanf(f, "%lld", &y);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-10s ", ch);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-10s |", ch);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-24s |", ch);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-17s |", ch);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-12s |", ch);
-            fgets(ch, MAX, f);
-            ch[strlen(ch) - 1] = '\0';
-            printf("%-10s |", ch);
-            printf(" %lld |", y);
-            printf(" %i |\n", x);
-
-
+        struct ksiazki *ks = ReadBooks(f);
+        struct ksiazki *tmp = ks;
+        while (tmp) {
+            printf("|%-3i|", tmp->nr_katalogowy);
+            printf(" %-9s ", tmp->autor_nazwisko);
+            printf("%-9s | ", tmp->autor_imie);
+            printf("%-24s | ", tmp->tytul);
+            printf("%-17s |", tmp->kategoria);
+            printf(" %-11s |", tmp->wydawnictwo);
+            printf("%-10s| ", tmp->data_wydania);
+            for (int i = 0; i < 13; ++i) {
+                printf("%i", tmp->nr_isbn[i]);
+            }
+            printf(" | %i |\n", tmp->dostepnosc);
+            tmp = tmp->next;
         }
+        uwolnicBarabasza(ks);
     }
+    fclose(f);
 }
 
 struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks) {
@@ -168,6 +169,16 @@ struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks) {
     return l;
 }
 
+void pustyPlik(FILE *f1, char *s, char *s2, FILE *f2, struct ksiazki *k) {
+    fclose(f1);
+    f1 = fopen(s, "wb");
+    if (fwrite(k, sizeof(struct ksiazki), 1, f1) == 1) {
+        fclose(f2);
+        f2 = fopen(s2, "w");
+        fprintf(f2, "nr_katalogowy:%i", 1);
+    }
+}
+
 void dodajKsiazke(int n) {
     char *Pksiazki = "../pliki/ksiazki.bin";
     char *dane = "../pliki/dane.txt";
@@ -189,9 +200,9 @@ void dodajKsiazke(int n) {
             f = fopen(Pksiazki, "wb");
             struct ksiazki *tmp = k2;
             while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
-                printf("%i %i %lld %s %s %s %s %s %s\n", tmp->nr_katalogowy, tmp->dostepnosc, tmp->nr_isbn,
-                       tmp->autor_nazwisko, tmp->autor_imie, tmp->tytul, tmp->kategoria, tmp->wydawnictwo,
-                       tmp->data_wydania);
+                /* printf("%i %i %lld %s %s %s %s %s %s\n", tmp->nr_katalogowy, tmp->dostepnosc, tmp->nr_isbn,
+                        tmp->autor_nazwisko, tmp->autor_imie, tmp->tytul, tmp->kategoria, tmp->wydawnictwo,
+                        tmp->data_wydania);*/
                 tmp = tmp->next;
             }
             int x;
@@ -201,72 +212,10 @@ void dodajKsiazke(int n) {
             fprintf(f2, "nr_katalogowy:%i", x + 1);
             uwolnicBarabasza(k2);
         } else {
-            fclose(f);
-            f = fopen(Pksiazki, "wb");
-            if (fwrite(k1, sizeof(struct ksiazki), 1, f) == 1) {
-                fclose(f2);
-                f2 = fopen(dane, "w");
-                fprintf(f2, "nr_katalogowy:%i", 1);
-            }
-            /*printf("\n%i %i %lld %s %s %s %s %s %s\n", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
-                   k1->autor_nazwisko, k1->autor_imie, k1->tytul, k1->kategoria, k1->wydawnictwo, k1->data_wydania);
-            fseek(f, 0, SEEK_SET);
-            struct ksiazki *k = malloc(sizeof(struct ksiazki));
-            while (!feof(f)) {
-                k = realloc(k, (i++ + 1) * sizeof(struct ksiazki));
-                fscanf(f, "%i", &k[i].nr_katalogowy);
-                fscanf(f, "%i", &k[i].dostepnosc);
-                fscanf(f, "%lld", &k[i].nr_isbn);
-                fgets(k[i].autor_nazwisko, MAX, f);
-                fgets(k[i].autor_imie, MAX, f);
-                fgets(k[i].tytul, MAX, f);
-                fgets(k[i].kategoria, MAX, f);
-                fgets(k[i].wydawnictwo, MAX, f);
-                fgets(k[i].data_wydania, MAX, f);
-                k[i].data_wydania[strlen(k[i].data_wydania) - 1] = '\0';
-            }
-            k1->nr_katalogowy = i + 1;
-            for (j = 0; j < i; ++j) {
-                if (strcasecmp(k1->autor_nazwisko, k[j].autor_nazwisko) < 0) {
-                    break;
-                }
-            }
-            fclose(f);
-            f = fopen("../pliki/ksiazki.txt", "w");
-            while (m < i) {
-                if (j == m) {
-                    if (m != 0) fprintf(f, "\n");
-                    fprintf(f, "%i %i %lld%s\n%s\n%s\n%s\n%s\n%s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
-                            k1->autor_nazwisko,
-                            k1->autor_imie,
-                            k1->tytul, k1->kategoria,
-                            k1->wydawnictwo, k1->data_wydania);
-                }
-                if (m != 0) fprintf(f, "\n");
-                fprintf(f, "%i %i %lld%s%s%s%s%s%s", k[m].nr_katalogowy, k[m].dostepnosc, k[m].nr_isbn,
-                        k[m].autor_nazwisko,
-                        k[m].autor_imie,
-                        k[m].tytul, k[m].kategoria,
-                        k[m].wydawnictwo, k[m].data_wydania);
-                m++;
-            }
-            if (j == i) {
-                fprintf(f, "\n%i %i %lld%s\n%s\n%s\n%s\n%s\n%s", k1->nr_katalogowy, k1->dostepnosc, k1->nr_isbn,
-                        k1->autor_nazwisko,
-                        k1->autor_imie,
-                        k1->tytul, k1->kategoria,
-                        k1->wydawnictwo, k1->data_wydania);
-            }
-            free(k);*/
+            pustyPlik(f, Pksiazki, dane, f2, k1);
         }
     } else {
-        fclose(f);
-        f = fopen(Pksiazki, "wb");
-        if (fwrite(k1, sizeof(struct ksiazki), 1, f) == 1) {
-            fclose(f2);
-            f2 = fopen(dane, "w");
-            fprintf(f2, "nr_katalogowy:%i", 1);
-        }
+        pustyPlik(f, Pksiazki, dane, f2, k1);
     }
     free(k1);
     fclose(f);
@@ -276,22 +225,20 @@ void dodajKsiazke(int n) {
 struct ksiazki *losowaKsiazka() {
     srand(time(0));
     struct ksiazki *ksiazka = malloc(sizeof(struct ksiazki));
-    char *imie[MAX] = {"Jane", "Emily", "George", "Philip", "Charles", "Thomas", "Jan", "Pawel", "Joseph",
-                       "Margaret", "Dan", "Leo", "Arthur"};
-    char *nazwisko[MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell",
-                           "Brown", "Golding", "Huxley", "Conan Doyle"};
-    char *tytul[MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
-                        "Folwark zwierzecy", "Kod Da Vinci", "Wladca much", "W drodze", "Moby Dick", "Germinal",
-                        "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
-    char *kategoria[MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
-                            "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
-    char *data_wydania[MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
-                               "01-01-1959", "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
-                               "09-08-1856"};
-    char *wydawnictwo[MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
-                              "W drodze", "SBM", "ISA", "Kos", "Bosz"};
-    long long isbn[12] = {2005917850652, 7137334183392, 1460338048199, 1771121865414, 3827938534880, 7527675674564,
-                          2728983381469, 4113757760531, 5191182644763, 5881868774856, 9613158509137, 5320278067692};
+    char imie[][MAX] = {"Jane", "Emily", "George", "Philip", "Charles", "Thomas", "Jan", "Pawel", "Joseph",
+                        "Margaret", "Dan", "Leo", "Arthur"};
+    char nazwisko[][MAX] = {"Tolkien", "Rowling", "Lee", "Dickens", "Adams", "Carroll", "Grahame", "Orwell",
+                            "Brown", "Golding", "Huxley", "Doyle"};
+    char tytul[][MAX] = {"Wladca Pierscieni", "Biblia", "Wielkie nadzieje", "Rok 1984", "Zbrodnia i kara",
+                         "Folwark zwierzecy", "Kod Da Vinci", "Wladca much", "W drodze", "Moby Dick", "Germinal",
+                         "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
+    char kategoria[][MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
+                             "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
+    char data_wydania[][MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
+                                "01-01-1959", "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
+                                "09-08-1856"};
+    char wydawnictwo[][MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
+                               "W drodze", "SBM", "ISA", "Kos", "Bosz"};
     ksiazka->dostepnosc = 1;
     strcpy(ksiazka->autor_nazwisko, nazwisko[rand() % 12]);
     strcpy(ksiazka->autor_imie, imie[rand() % 13]);
@@ -299,12 +246,20 @@ struct ksiazki *losowaKsiazka() {
     strcpy(ksiazka->kategoria, kategoria[rand() % 12]);
     strcpy(ksiazka->data_wydania, data_wydania[rand() % 12]);
     strcpy(ksiazka->wydawnictwo, wydawnictwo[rand() % 13]);
-    ksiazka->nr_isbn = isbn[rand() % 12];
+    int i, x;
+    for (i = 0; i < 13; i++) {
+        ksiazka->nr_isbn[i] = rand() % 10;
+    }
     ksiazka->next = NULL;
-    int x;
     FILE *f2 = fopen("../pliki/dane.txt", "r");
-    fscanf(f2, "nr_katalogowy:%i", &x);
-    ksiazka->nr_katalogowy = x + 1;
+    if (f2) {
+        fseek(f2, 0, SEEK_END);
+        if (ftell(f2) != 0) {
+            rewind(f2);
+            fscanf(f2, "nr_katalogowy:%i", &x);
+            ksiazka->nr_katalogowy = x + 1;
+        } else ksiazka->nr_katalogowy = 1;
+    } else ksiazka->nr_katalogowy = 1;
     fclose(f2);
     return ksiazka;
 }
