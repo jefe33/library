@@ -7,8 +7,8 @@
 #define MAX 50
 struct ksiazki {
     unsigned int nr_isbn[13];
-    int nr_katalogowy, dostepnosc;
-    char autor_nazwisko[MAX], autor_imie[MAX], tytul[MAX], kategoria[MAX], data_wydania[MAX], wydawnictwo[MAX];
+    int nr_katalogowy, dostepnosc, data_wydania;
+    char autor_nazwisko[MAX], autor_imie[MAX], tytul[MAX], kategoria[MAX], wydawnictwo[MAX];
     struct ksiazki *next;
 };
 
@@ -94,9 +94,96 @@ int is_positive_number(char *s, int len) {
     return 1;
 }
 
+void usunRok() {
+    int max, i = 1, rok;
+    clear();
+    printf("Podaj rok wydania ktory chcesz usunac\n");
+    scanf("%i", &rok);
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    if (f != NULL) {
+        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *tmp = ks;
+        while (tmp && i) {
+            if (tmp->data_wydania == rok) {
+                ks = tmp->next;
+            } else {
+                i = 0;
+            }
+            tmp = tmp->next;
+        }
+        if (i == 1) {
+            uwolnicBarabasza(ks);
+            fclose(f);
+            return;
+        }
+        struct ksiazki *prev = ks;
+        tmp = ks;
+        while (tmp) {
+            if (tmp->data_wydania == rok) {
+                prev->next = tmp->next;
+            } else {
+                prev = tmp;
+            }
+            tmp = tmp->next;
+        }
+        tmp = ks;
+        fclose(f);
+        f = fopen("../pliki/ksiazki.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicBarabasza(ks);
+    }
+    fclose(f);
+}
+
+void usunAutora() {
+    char *s;
+    clear();
+    printf("Podaj nazwisko autora ktorego chcesz usunac\n");
+    s = wczytajString();
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    int max, i = 1;
+    if (f != NULL) {
+        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *tmp = ks;
+        while (tmp && i) {
+            if (strcmp(tmp->autor_nazwisko, s) == 0) {
+                ks = tmp->next;
+            } else {
+                i = 0;
+            }
+            tmp = tmp->next;
+        }
+        if (i == 1) {
+            uwolnicBarabasza(ks);
+            fclose(f);
+            return;
+        }
+        struct ksiazki *prev = ks;
+        tmp = ks;
+        while (tmp) {
+            if (strcmp(tmp->autor_nazwisko, s) == 0) {
+                prev->next = tmp->next;
+            } else {
+                prev = tmp;
+            }
+            tmp = tmp->next;
+        }
+        tmp = ks;
+        fclose(f);
+        f = fopen("../pliki/ksiazki.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicBarabasza(ks);
+    }
+    fclose(f);
+}
+
 struct ksiazki *utworzKsiazke() {
     char z[13];
-    int len, i;
+    int len, i, x;
     clear();
     struct ksiazki *ksiazka = malloc(sizeof(struct ksiazki));
     strcpy(ksiazka->tytul, wczytajKsiazka("Podaj tytul ksiazki"));
@@ -104,7 +191,11 @@ struct ksiazki *utworzKsiazke() {
     strcpy(ksiazka->autor_imie, wczytajKsiazka("Podaj imie autora ksiazki"));
     strcpy(ksiazka->kategoria, wczytajKsiazka("Podaj kategorie ksiazki"));
     strcpy(ksiazka->wydawnictwo, wczytajKsiazka("Podaj wydawnictwo ksiazki"));
-    strcpy(ksiazka->data_wydania, wczytajKsiazka("Podaj date wydania w formacie DD-MM-RRRR"));
+    do {
+        printf("Podaj rok wydania\n");
+        scanf("%i", &x);
+    } while (x < 1000 || x > 9999);
+    ksiazka->data_wydania = x;
     ksiazka->dostepnosc = 1;
     do {
         printf("Podaj 13-nasto cyfrowy numer ISBN\n");
@@ -128,12 +219,12 @@ struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l) {
     struct ksiazki *t = NULL;
     while (tmp) {
         t = tmp->next;
-        if (!sorted || strcmp(tmp->tytul, sorted->tytul) <= 0) {
+        if (!sorted || strcasecmp(tmp->tytul, sorted->tytul) <= 0) {
             tmp->next = sorted;
             sorted = tmp;
         } else {
             tmp2 = sorted;
-            while (tmp2->next && strcmp(tmp2->next->tytul, tmp->tytul) < 0) {
+            while (tmp2->next && strcasecmp(tmp2->next->tytul, tmp->tytul) < 0) {
                 tmp2 = tmp2->next;
             }
             tmp->next = tmp2->next;
@@ -151,17 +242,17 @@ void wyswietlWedlugAutora() {
         struct ksiazki *ks = ReadBooks(f, &max);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
-            printf("|nr |         autor       |          tytul           |    kategoria     | wydawnictwo |data_wydania|nr_ISBN|dostepnosc|\n");
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
+            printf("------------------------------------------------------------------------------------------------------------------------");
+            printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
+            printf("------------------------------------------------------------------------------------------------------------------------");
             while (tmp) {
-                printf("|%-3i|", tmp->nr_katalogowy);
-                printf(" %-9s ", tmp->autor_nazwisko);
-                printf("%-9s | ", tmp->autor_imie);
-                printf("%-24s | ", tmp->tytul);
+                printf("| %-3i|", tmp->nr_katalogowy);
+                printf(" %-10s ", tmp->autor_nazwisko);
+                printf("%-10s | ", tmp->autor_imie);
+                printf("%-25s | ", tmp->tytul);
                 printf("%-17s |", tmp->kategoria);
                 printf(" %-11s |", tmp->wydawnictwo);
-                printf("%-10s| ", tmp->data_wydania);
+                printf(" %-4i | ", tmp->data_wydania);
                 for (i = 0; i < 13; ++i) {
                     printf("%i", tmp->nr_isbn[i]);
                 }
@@ -182,17 +273,17 @@ void wyswietlWedlugTytulu() {
         ks = sortowaniePrzezWstawianie(ks);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
-            printf("|nr |         autor       |          tytul           |    kategoria     | wydawnictwo |data_wydania|nr_ISBN|dostepnosc|\n");
-            printf("-----------------------------------------------------------------------------------------------------------------------\n");
+            printf("------------------------------------------------------------------------------------------------------------------------");
+            printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
+            printf("------------------------------------------------------------------------------------------------------------------------");
             while (tmp) {
-                printf("|%-3i|", tmp->nr_katalogowy);
-                printf(" %-9s ", tmp->autor_nazwisko);
-                printf("%-9s | ", tmp->autor_imie);
-                printf("%-24s | ", tmp->tytul);
+                printf("| %-3i|", tmp->nr_katalogowy);
+                printf(" %-10s ", tmp->autor_nazwisko);
+                printf("%-10s | ", tmp->autor_imie);
+                printf("%-25s | ", tmp->tytul);
                 printf("%-17s |", tmp->kategoria);
                 printf(" %-11s |", tmp->wydawnictwo);
-                printf("%-10s| ", tmp->data_wydania);
+                printf(" %-4i | ", tmp->data_wydania);
                 for (i = 0; i < 13; ++i) {
                     printf("%i", tmp->nr_isbn[i]);
                 }
@@ -206,7 +297,7 @@ void wyswietlWedlugTytulu() {
 }
 
 struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks) {
-    if (strcmp(l->autor_nazwisko, ks->autor_nazwisko) > 0) {
+    if (strcasecmp(l->autor_nazwisko, ks->autor_nazwisko) > 0) {
         ks->next = l;
         l = ks;
         return l;
@@ -217,7 +308,7 @@ struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks) {
             tmp->next = ks;
             break;
         } else {
-            if (tmp->next && strcmp(tmp->next->autor_nazwisko, ks->autor_nazwisko) > 0) {
+            if (tmp->next && strcasecmp(tmp->next->autor_nazwisko, ks->autor_nazwisko) > 0) {
                 ks->next = tmp->next;
                 tmp->next = ks;
                 break;
@@ -281,9 +372,6 @@ struct ksiazki *losowaKsiazka() {
                          "Opetanie", "Okruchy dnia", "Pani Bovary", "A Fine Balance"};
     char kategoria[][MAX] = {"fantasy", "horror", "SF", "literatura faktu", "literatura piekna", "thriller",
                              "kryminal", "romans", "sensacja", "przygodowa", "historyczna", "popularnonaukowa"};
-    char data_wydania[][MAX] = {"05-01-1937", "02-01-1923", "04-07-1918", "26-04-1907", "06-11-2003",
-                                "01-01-1959", "20-10-2000", "20-02-1939", "15-01-2013", "05-04-1991", "25-03-2020",
-                                "09-08-1856"};
     char wydawnictwo[][MAX] = {"Helion", "Znak", "Amber", "Impuls", "Mag", "Replika", "WSiP", "Nowa Era",
                                "W drodze", "SBM", "ISA", "Kos", "Bosz"};
     ksiazka->dostepnosc = 1;
@@ -291,7 +379,7 @@ struct ksiazki *losowaKsiazka() {
     strcpy(ksiazka->autor_imie, imie[rand() % 13]);
     strcpy(ksiazka->tytul, tytul[rand() % 15]);
     strcpy(ksiazka->kategoria, kategoria[rand() % 12]);
-    strcpy(ksiazka->data_wydania, data_wydania[rand() % 12]);
+    ksiazka->data_wydania = rand() % 521 + 1500;
     strcpy(ksiazka->wydawnictwo, wydawnictwo[rand() % 13]);
     int i;
     for (i = 0; i < 13; i++) {
