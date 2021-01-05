@@ -94,6 +94,121 @@ int is_positive_number(char *s, int len) {
     return 1;
 }
 
+void wyswietlK(struct ksiazki *k) {
+    int i;
+    printf("------------------------------------------------------------------------------------------------------------------------");
+    printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
+    printf("------------------------------------------------------------------------------------------------------------------------");
+    while (k) {
+        printf("| %-3i|", k->nr_katalogowy);
+        printf(" %-10s ", k->autor_nazwisko);
+        printf("%-10s | ", k->autor_imie);
+        printf("%-25s | ", k->tytul);
+        printf("%-17s |", k->kategoria);
+        printf(" %-11s |", k->wydawnictwo);
+        printf(" %-4i | ", k->data_wydania);
+        for (i = 0; i < 13; ++i) {
+            printf("%i", k->nr_isbn[i]);
+        }
+        printf(" | %i |\n", k->dostepnosc);
+        k = k->next;
+    }
+}
+
+int menuEdycji() {
+    printf("0.Wroc\n1.Zmien tytul ksiazki\n2.Zmien nazwisko autora ksiazki\n3.Zmien imie autora ksiazki\n"
+           "4.Zmien kategorie ksiazki\n5.Zmien wydawnictwo ksiazki\n6.Zmien rok wydania ksiazki\n7.Zmien numer ISBN\n8.Zmien dostepnosc\n");
+    int x;
+    scanf("%d", &x);
+    return x;
+}
+
+void edytujKsiazke() {
+    int max, i = 1, nr, x;
+    clear();
+    printf("Podaj numer katalogowy ksiazki ktora chcesz edytowac\n");
+    scanf("%i", &nr);
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    if (f != NULL) {
+        struct ksiazki *ks = ReadBooks(f, &max);
+        if (nr > max || nr < 1) {
+            fclose(f);
+            return;
+        }
+        struct ksiazki *tmp = ks;
+        while (tmp) {
+            if (tmp->nr_katalogowy == nr) {
+                i = 0;
+                break;
+            }
+            tmp = tmp->next;
+        }
+        if (i == 1) {
+            uwolnicBarabasza(ks);
+            fclose(f);
+            return;
+        }
+        struct ksiazki *p = tmp->next;
+        tmp->next = NULL;
+        wyswietlK(tmp);
+        tmp->next = p;
+        char z[13];
+        int len;
+        x = menuEdycji();
+        clear();
+        switch (x) {
+            case 0:
+                break;
+            case 1:
+                strcpy(tmp->tytul, wczytajKsiazka("Podaj tytul ksiazki"));
+                break;
+            case 2:
+                strcpy(tmp->autor_nazwisko, wczytajKsiazka("Podaj nazwisko autora ksiazki"));
+                break;
+            case 3:
+                strcpy(tmp->autor_imie, wczytajKsiazka("Podaj imie autora ksiazki"));
+                break;
+            case 4:
+                strcpy(tmp->kategoria, wczytajKsiazka("Podaj kategorie ksiazki"));
+                break;
+            case 5:
+                strcpy(tmp->wydawnictwo, wczytajKsiazka("Podaj wydawnictwo ksiazki"));
+                break;
+            case 6:
+                do {
+                    printf("Podaj rok wydania\n");
+                    scanf("%i", &i);
+                } while (i < 1000 || i > 9999);
+                tmp->data_wydania = i;
+                break;
+            case 7:
+                do {
+                    printf("Podaj 13-nasto cyfrowy numer ISBN\n");
+                    scanf("%s", z);
+                    len = strlen(z);
+                } while (len != 13 || !is_positive_number(z, len));
+                for (i = 0; i < 13; ++i) {
+                    tmp->nr_isbn[i] = z[i] - '0';
+                }
+                break;
+            case 8:
+                printf("Podaj numer dostepnych\n");
+                scanf("%i", &tmp->dostepnosc);
+                break;
+            default:
+                break;
+        }
+        tmp = ks;
+        fclose(f);
+        f = fopen("../pliki/ksiazki.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicBarabasza(ks);
+    }
+    fclose(f);
+}
+
 void usunRok() {
     int max, i = 1, rok;
     clear();
@@ -235,6 +350,7 @@ struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l) {
     return sorted;
 }
 
+
 void wyswietlWedlugAutora() {
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     int max, i;
@@ -242,23 +358,7 @@ void wyswietlWedlugAutora() {
         struct ksiazki *ks = ReadBooks(f, &max);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
-            printf("------------------------------------------------------------------------------------------------------------------------");
-            printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
-            printf("------------------------------------------------------------------------------------------------------------------------");
-            while (tmp) {
-                printf("| %-3i|", tmp->nr_katalogowy);
-                printf(" %-10s ", tmp->autor_nazwisko);
-                printf("%-10s | ", tmp->autor_imie);
-                printf("%-25s | ", tmp->tytul);
-                printf("%-17s |", tmp->kategoria);
-                printf(" %-11s |", tmp->wydawnictwo);
-                printf(" %-4i | ", tmp->data_wydania);
-                for (i = 0; i < 13; ++i) {
-                    printf("%i", tmp->nr_isbn[i]);
-                }
-                printf(" | %i |\n", tmp->dostepnosc);
-                tmp = tmp->next;
-            }
+            wyswietlK(tmp);
             uwolnicBarabasza(ks);
         } else printf("Brak ksiazek\n");
     } else printf("Brak ksiazek\n");
@@ -273,23 +373,7 @@ void wyswietlWedlugTytulu() {
         ks = sortowaniePrzezWstawianie(ks);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
-            printf("------------------------------------------------------------------------------------------------------------------------");
-            printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
-            printf("------------------------------------------------------------------------------------------------------------------------");
-            while (tmp) {
-                printf("| %-3i|", tmp->nr_katalogowy);
-                printf(" %-10s ", tmp->autor_nazwisko);
-                printf("%-10s | ", tmp->autor_imie);
-                printf("%-25s | ", tmp->tytul);
-                printf("%-17s |", tmp->kategoria);
-                printf(" %-11s |", tmp->wydawnictwo);
-                printf(" %-4i | ", tmp->data_wydania);
-                for (i = 0; i < 13; ++i) {
-                    printf("%i", tmp->nr_isbn[i]);
-                }
-                printf(" | %i |\n", tmp->dostepnosc);
-                tmp = tmp->next;
-            }
+            wyswietlK(tmp);
             uwolnicBarabasza(ks);
         } else printf("Brak ksiazek\n");
     } else printf("Brak ksiazek\n");
