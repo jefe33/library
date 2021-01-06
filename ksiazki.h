@@ -1,10 +1,3 @@
-#include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-#define MAX 50
 struct ksiazki {
     unsigned int nr_isbn[13];
     int nr_katalogowy, dostepnosc, data_wydania;
@@ -12,9 +5,41 @@ struct ksiazki {
     struct ksiazki *next;
 };
 
+int is_empty(char *s);
+
+void uwolnicKsiazki(struct ksiazki *t);
+
+char *wczytajString();
+
+char *wczytajKsiazka(char *s);
+
+int is_positive_number(char *s, int len);
+
+void wyswietlK(struct ksiazki *k);
+
+int menuEdycji();
+
+void edytujKsiazke();
+
+void usunRok();
+
+void usunAutora();
+
+struct ksiazki *utworzKsiazke();
+
+struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l);
+
+void wyswietlWedlugAutora();
+
+void wyswietlWedlugTytulu();
+
+struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks);
+
 struct ksiazki *losowaKsiazka();
 
-struct ksiazki *ReadBooks(FILE *in_stream, int *max) {
+void dodajKsiazke(int);
+
+struct ksiazki *wczytajKsiazki(FILE *in_stream, int *max) {
     *max = 0;
     struct ksiazki head;
     head.next = NULL; // code only uses the `next` field of head
@@ -48,7 +73,7 @@ int is_empty(char *s) {
     return 1;
 }
 
-void uwolnicBarabasza(struct ksiazki *t) {
+void uwolnicKsiazki(struct ksiazki *t) {
     struct ksiazki *tmp;
     while (t) {
         tmp = t;
@@ -130,7 +155,7 @@ void edytujKsiazke() {
     scanf("%i", &nr);
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     if (f != NULL) {
-        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
         if (nr > max || nr < 1) {
             fclose(f);
             return;
@@ -144,7 +169,7 @@ void edytujKsiazke() {
             tmp = tmp->next;
         }
         if (i == 1) {
-            uwolnicBarabasza(ks);
+            uwolnicKsiazki(ks);
             fclose(f);
             return;
         }
@@ -204,7 +229,7 @@ void edytujKsiazke() {
         while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
             tmp = tmp->next;
         }
-        uwolnicBarabasza(ks);
+        uwolnicKsiazki(ks);
     }
     fclose(f);
 }
@@ -216,7 +241,7 @@ void usunRok() {
     scanf("%i", &rok);
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     if (f != NULL) {
-        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
         struct ksiazki *tmp = ks;
         while (tmp && i) {
             if (tmp->data_wydania == rok) {
@@ -225,11 +250,6 @@ void usunRok() {
                 i = 0;
             }
             tmp = tmp->next;
-        }
-        if (i == 1) {
-            uwolnicBarabasza(ks);
-            fclose(f);
-            return;
         }
         struct ksiazki *prev = ks;
         tmp = ks;
@@ -247,7 +267,7 @@ void usunRok() {
         while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
             tmp = tmp->next;
         }
-        uwolnicBarabasza(ks);
+        uwolnicKsiazki(ks);
     }
     fclose(f);
 }
@@ -260,7 +280,7 @@ void usunAutora() {
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     int max, i = 1;
     if (f != NULL) {
-        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
         struct ksiazki *tmp = ks;
         while (tmp && i) {
             if (strcmp(tmp->autor_nazwisko, s) == 0) {
@@ -269,11 +289,6 @@ void usunAutora() {
                 i = 0;
             }
             tmp = tmp->next;
-        }
-        if (i == 1) {
-            uwolnicBarabasza(ks);
-            fclose(f);
-            return;
         }
         struct ksiazki *prev = ks;
         tmp = ks;
@@ -291,7 +306,7 @@ void usunAutora() {
         while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
             tmp = tmp->next;
         }
-        uwolnicBarabasza(ks);
+        uwolnicKsiazki(ks);
     }
     fclose(f);
 }
@@ -355,11 +370,11 @@ void wyswietlWedlugAutora() {
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     int max, i;
     if (f != NULL) {
-        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
             wyswietlK(tmp);
-            uwolnicBarabasza(ks);
+            uwolnicKsiazki(ks);
         } else printf("Brak ksiazek\n");
     } else printf("Brak ksiazek\n");
     fclose(f);
@@ -369,12 +384,12 @@ void wyswietlWedlugTytulu() {
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     int max, i;
     if (f != NULL) {
-        struct ksiazki *ks = ReadBooks(f, &max);
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
         ks = sortowaniePrzezWstawianie(ks);
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
             wyswietlK(tmp);
-            uwolnicBarabasza(ks);
+            uwolnicKsiazki(ks);
         } else printf("Brak ksiazek\n");
     } else printf("Brak ksiazek\n");
     fclose(f);
@@ -417,7 +432,7 @@ void dodajKsiazke(int n) {
         if (ftell(f) != 0) {
             rewind(f);
             int max;
-            struct ksiazki *k2 = ReadBooks(f, &max);
+            struct ksiazki *k2 = wczytajKsiazki(f, &max);
             k1->nr_katalogowy = max + 1;
             k2 = wstawPosortowane(k2, k1);
             fclose(f);
@@ -426,7 +441,7 @@ void dodajKsiazke(int n) {
             while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
                 tmp = tmp->next;
             }
-            uwolnicBarabasza(k2);
+            uwolnicKsiazki(k2);
         } else {
             fclose(f);
             f = fopen(Pksiazki, "wb");

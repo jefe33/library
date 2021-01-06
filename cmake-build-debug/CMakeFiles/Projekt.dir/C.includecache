@@ -9,10 +9,6 @@
 C:/Users/user/Desktop/programy/programy c/Projekt/index.c
 stdio.h
 -
-ksiazki.h
-C:/Users/user/Desktop/programy/programy c/Projekt/ksiazki.h
-
-C:/Users/user/Desktop/programy/programy c/Projekt/ksiazki.h
 stdlib.h
 -
 time.h
@@ -23,4 +19,12 @@ string.h
 -
 ctype.h
 -
+ksiazki.h
+C:/Users/user/Desktop/programy/programy c/Projekt/ksiazki.h
+klienci.h
+C:/Users/user/Desktop/programy/programy c/Projekt/klienci.h
+
+C:/Users/user/Desktop/programy/programy c/Projekt/klienci.h
+
+C:/Users/user/Desktop/programy/programy c/Projekt/ksiazki.h
 

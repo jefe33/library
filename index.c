@@ -1,6 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX 50
 
 #include "ksiazki.h"
+#include "klienci.h"
 
 struct klient {
     int telefon;
@@ -86,13 +94,44 @@ void wyswietlMenuKsiazek() {
 
 
 void wyswietlMenuKlientow() {
-    char menu[][70] = {"wyswietl klientow posortowanych alfabetycznie\n",
-                       "wyswietl klientow posortowanych wzgledem wypozyczonych ksiazek\n",
-                       "dodaj klienta\n",
-                       "edytuj klienta\n",
-                       "usun klienta\n",
+    char menu[][70] = {"Wroc", "wyswietl klientow posortowanych alfabetycznie",
+                       "wyswietl klientow posortowanych wzgledem wypozyczonych ksiazek",
+                       "dodaj klienta",
+                       "edytuj klienta",
+                       "usun klienta",
+                       "dodaj losowego klienta\n"
     };
-    for (int i = 0; i < 6; ++i) {
-        printf("%i. %s", i + 1, menu[i]);
-    }
+    int x;
+    do {
+        for (int i = 0; i < 7; ++i) {
+            printf("\n%i. %s", i, menu[i]);
+        }
+        scanf("%d", &x);
+        switch (x) {
+            case 0:
+                wyswietlMenu();
+                break;
+            case 1:
+                wyswietlWedlugNazwiska();
+                break;
+            case 2:
+                //wyswietlWedlugTytulu();
+                break;
+            case 3:
+                dodajKlienta(0);
+                break;
+            case 4:
+                //edytujKsiazke();
+                break;
+            case 5:
+                usunKlienta();
+                break;
+            case 6:
+                dodajKlienta(1);
+                break;
+            default:
+                wyswietlMenu();
+                break;
+        }
+    } while (x != 0);
 }
