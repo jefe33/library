@@ -9,6 +9,7 @@
 
 #include "ksiazki.h"
 #include "klienci.h"
+#include "wypozyczenia.h"
 
 struct klient {
     int telefon;
@@ -22,6 +23,8 @@ void wyswietlMenuKsiazek();
 
 void wyswietlMenuKlientow();
 
+void wyswietlMenuWypozyczen();
+
 int main() {
     wyswietlMenu();
     return 0;
@@ -30,6 +33,7 @@ int main() {
 void wyswietlMenu() {
     printf("1. Menu ksiazek\n");
     printf("2. Menu klientow\n");
+    printf("3. Menu wypozyczen\n");
     printf("0. Wyjscie z programu\n");
     int x;
     scanf("%d", &x);
@@ -38,6 +42,8 @@ void wyswietlMenu() {
         wyswietlMenuKsiazek();
     } else if (x == 2) {
         wyswietlMenuKlientow();
+    } else if (x == 3) {
+        wyswietlMenuWypozyczen();
     } else {
         wyswietlMenu();
     }
@@ -121,7 +127,7 @@ void wyswietlMenuKlientow() {
                 dodajKlienta(0);
                 break;
             case 4:
-                //edytujKsiazke();
+                edytujKlienta();
                 break;
             case 5:
                 usunKlienta();
@@ -134,4 +140,23 @@ void wyswietlMenuKlientow() {
                 break;
         }
     } while (x != 0);
+}
+
+void wyswietlMenuWypozyczen() {
+    int x;
+    do {
+        printf("1. Dodaj wypozyczenie\n");
+        printf("2. Usun wypozyczenie\n");
+        printf("3. Wyswietl wypozyczenia\n");
+        printf("0. Wroc\n");
+        scanf("%d", &x);
+        if (x == 1) {
+            dodajWypozyczenie();
+        } else if (x == 2) {
+            //
+        } else if (x == 3) {
+            wyswietlWypozyczenia();
+        }
+    } while (x != 0);
+
 }

@@ -17,7 +17,7 @@ int is_positive_number(char *s, int len);
 
 void wyswietlK(struct ksiazki *k);
 
-int menuEdycji();
+int menuEdycjiKsiazki();
 
 void edytujKsiazke();
 
@@ -140,7 +140,7 @@ void wyswietlK(struct ksiazki *k) {
     }
 }
 
-int menuEdycji() {
+int menuEdycjiKsiazki() {
     printf("0.Wroc\n1.Zmien tytul ksiazki\n2.Zmien nazwisko autora ksiazki\n3.Zmien imie autora ksiazki\n"
            "4.Zmien kategorie ksiazki\n5.Zmien wydawnictwo ksiazki\n6.Zmien rok wydania ksiazki\n7.Zmien numer ISBN\n8.Zmien dostepnosc\n");
     int x;
@@ -179,7 +179,7 @@ void edytujKsiazke() {
         tmp->next = p;
         char z[13];
         int len;
-        x = menuEdycji();
+        x = menuEdycjiKsiazki();
         clear();
         switch (x) {
             case 0:

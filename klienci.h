@@ -24,7 +24,7 @@ struct klienci *wstawPosortowanych(struct klienci *l, struct klienci *ks);
 
 struct klienci *utworzKlienta();
 
-void dodajKlienta(int);
+int dodajKlienta(int);
 
 struct klienci *losowyKlient();
 
@@ -72,8 +72,9 @@ void usunKlienta() {
         struct klienci *kl = wczytajKlientow(f, &max);
         struct klienci *tmp = kl;
         while (tmp && i) {
-            if (tmp->index == nr && i) {
+            if (tmp->index == nr) {
                 kl = tmp->next;
+                break;
             } else {
                 i = 0;
             }
@@ -88,6 +89,74 @@ void usunKlienta() {
                 prev = tmp;
             }
             tmp = tmp->next;
+        }
+        tmp = kl;
+        fclose(f);
+        f = fopen("../pliki/klienci.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct klienci), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicKlientow(kl);
+    }
+    fclose(f);
+}
+
+int menuEdycjiKlienta() {
+    printf("0.Wroc\n1.Zmien nazwisko klienta\n2.Zmien imie klienta\n3.Zmien adres klienta\n"
+           "4.Zmien numer telefonu klienta\n");
+    int x;
+    scanf("%d", &x);
+    return x;
+}
+
+void edytujKlienta() {
+    int max, i = 1, nr, x;
+    clear();
+    printf("Podaj numer klienta ktorego chcesz edytowac\n");
+    scanf("%i", &nr);
+    FILE *f = fopen("../pliki/klienci.bin", "rb");
+    if (f != NULL) {
+        struct klienci *kl = wczytajKlientow(f, &max);
+        if (nr > max || nr < 1) {
+            fclose(f);
+            return;
+        }
+        struct klienci *tmp = kl;
+        while (tmp) {
+            if (tmp->index == nr) {
+                i = 0;
+                break;
+            }
+            tmp = tmp->next;
+        }
+        if (i == 1) {
+            uwolnicKlientow(kl);
+            fclose(f);
+            return;
+        }
+        struct klienci *p = tmp->next;
+        tmp->next = NULL;
+        wyswietlKlientow(tmp);
+        tmp->next = p;
+        x = menuEdycjiKlienta();
+        clear();
+        switch (x) {
+            case 0:
+                break;
+            case 1:
+                strcpy(tmp->nazwisko, wczytajKsiazka("Podaj nazwisko klienta"));
+                break;
+            case 2:
+                strcpy(tmp->imie, wczytajKsiazka("Podaj imie klienta"));
+                break;
+            case 3:
+                strcpy(tmp->adres, wczytajKsiazka("Podaj adres klienta"));
+                break;
+            case 4:
+                strcpy(tmp->telefon, wczytajKsiazka("Podaj numer telefonu klienta"));
+                break;
+            default:
+                break;
         }
         tmp = kl;
         fclose(f);
@@ -167,7 +236,7 @@ void wyswietlWedlugLiczby() {
 
 void wyswietlWedlugNazwiska() {
     FILE *f = fopen("../pliki/klienci.bin", "rb");
-    int max, i;
+    int max;
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
         struct klienci *tmp = kl;
@@ -213,9 +282,10 @@ struct klienci *utworzKlienta() {
     return klient;
 }
 
-void dodajKlienta(int n) {
+int dodajKlienta(int n) {
     char *Pklient = "../pliki/klienci.bin";
     struct klienci *k1;
+    int ind;
     if (n) {
         k1 = losowyKlient();
     } else {
@@ -228,7 +298,8 @@ void dodajKlienta(int n) {
             rewind(f);
             int max;
             struct klienci *k2 = wczytajKlientow(f, &max);
-            k1->index = max + 1;
+            ind = max + 1;
+            k1->index = ind;
             k2 = wstawPosortowanych(k2, k1);
             fclose(f);
             f = fopen(Pklient, "wb");
@@ -240,18 +311,21 @@ void dodajKlienta(int n) {
         } else {
             fclose(f);
             f = fopen(Pklient, "wb");
-            k1->index = 1;
+            ind = 1;
+            k1->index = ind;
             fwrite(k1, sizeof(struct klienci), 1, f);
             free(k1);
         }
     } else {
         fclose(f);
         f = fopen(Pklient, "wb");
-        k1->index = 1;
+        ind = 1;
+        k1->index = ind;
         fwrite(k1, sizeof(struct klienci), 1, f);
         free(k1);
     }
     fclose(f);
+    return ind;
 }
 
 struct klienci *losowyKlient() {
