@@ -1,5 +1,5 @@
 struct klienci {
-    int index;
+    int index, ilosc;
     char nazwisko[MAX], imie[MAX], adres[MAX], telefon[MAX];
     struct klienci *next;
 };
@@ -64,37 +64,47 @@ void uwolnicKlientow(struct klienci *t) {
 }
 
 void usunKlienta() {
-    int max, i = 1, nr;
+    int max, i = 0, nr;
     printf("Podaj numer klienta ktorego chcesz usunac\n");
     scanf("%i", &nr);
     FILE *f = fopen("../pliki/klienci.bin", "rb");
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
         struct klienci *tmp = kl;
-        while (tmp && i) {
-            if (tmp->index == nr) {
+        if (tmp->index == nr) {
+            i = 1;
+            if (tmp->ilosc > 0) {
+                i = 2;
+            } else {
                 kl = tmp->next;
-                break;
-            } else {
-                i = 0;
             }
-            tmp = tmp->next;
-        }
-        struct klienci *prev = kl;
-        tmp = kl;
-        while (tmp) {
-            if (tmp->index == nr) {
-                prev->next = tmp->next;
-            } else {
-                prev = tmp;
+        } else {
+            struct klienci *prev = kl;
+            tmp = kl;
+            while (tmp) {
+                if (tmp->index == nr) {
+                    i = 1;
+                    if (tmp->ilosc > 0) {
+                        i = 2;
+                    } else {
+                        prev->next = tmp->next;
+                    }
+                    break;
+                } else {
+                    prev = tmp;
+                }
+                tmp = tmp->next;
             }
-            tmp = tmp->next;
         }
-        tmp = kl;
-        fclose(f);
-        f = fopen("../pliki/klienci.bin", "wb");
-        while (tmp && fwrite(tmp, sizeof(struct klienci), 1, f) == 1) {
-            tmp = tmp->next;
+        if (i == 1) {
+            tmp = kl;
+            fclose(f);
+            f = fopen("../pliki/klienci.bin", "wb");
+            while (tmp && fwrite(tmp, sizeof(struct klienci), 1, f) == 1) {
+                tmp = tmp->next;
+            }
+        } else if (i == 2) {
+            printf("Nie mozna usunac bo klient ma wypozyczone ksiazki");
         }
         uwolnicKlientow(kl);
     }
@@ -182,18 +192,18 @@ struct klienci *sortowaniePrzezWstawianieKL(struct klienci *l) {
     if (l == NULL || l->next == NULL) {
         return l;
     }
-    /*struct klienci *sorted = NULL;
+    struct klienci *sorted = NULL;
     struct klienci *tmp = l;
     struct klienci *tmp2;
     struct klienci *t = NULL;
     while (tmp) {
         t = tmp->next;
-        if (!sorted || strcasecmp(tmp->tytul, sorted->tytul) <= 0) {
+        if (!sorted || tmp->ilosc > sorted->ilosc) {
             tmp->next = sorted;
             sorted = tmp;
         } else {
             tmp2 = sorted;
-            while (tmp2->next && strcasecmp(tmp2->next->tytul, tmp->tytul) < 0) {
+            while (tmp2->next && tmp2->next->ilosc > tmp->ilosc) {
                 tmp2 = tmp2->next;
             }
             tmp->next = tmp2->next;
@@ -201,7 +211,7 @@ struct klienci *sortowaniePrzezWstawianieKL(struct klienci *l) {
         }
         tmp = t;
     }
-    return sorted;*/
+    return sorted;
 }
 
 void wyswietlKlientow(struct klienci *k) {
@@ -213,25 +223,26 @@ void wyswietlKlientow(struct klienci *k) {
         printf("%-10s | ", k->imie);
         printf("%-15s | ", k->nazwisko);
         printf("%-40s | ", k->adres);
-        printf("%-15s |", k->telefon);
+        printf("%-16s | ", k->telefon);
+        printf("%-3i  |", k->ilosc);
         printf("\n");
         k = k->next;
     }
 }
 
 void wyswietlWedlugLiczby() {
-    /* FILE *f = fopen("../pliki/klienci.bin", "rb");
-     int max, i;
-     if (f != NULL) {
-         struct klienci *kl = wczytajKlientow(f, &max);
-         kl = sortowaniePrzezWstawianieKL(kl);
-         struct klienci *tmp = kl;
-         if (tmp != NULL) {
-             wyswietlKlientow(tmp);
-             uwolnicKlientow(kl);
-         } else printf("Brak kliazek\n");
-     } else printf("Brak kliazek\n");
-     fclose(f);*/
+    FILE *f = fopen("../pliki/klienci.bin", "rb");
+    int max, i;
+    if (f != NULL) {
+        struct klienci *kl = wczytajKlientow(f, &max);
+        kl = sortowaniePrzezWstawianieKL(kl);
+        struct klienci *tmp = kl;
+        if (tmp != NULL) {
+            wyswietlKlientow(tmp);
+            uwolnicKlientow(kl);
+        } else printf("Brak Klientow\n");
+    } else printf("Brak Klientow\n");
+    fclose(f);
 }
 
 void wyswietlWedlugNazwiska() {
@@ -279,6 +290,7 @@ struct klienci *utworzKlienta() {
     strcpy(klient->adres, wczytajKlienta("Podaj adres klienta"));
     strcpy(klient->telefon, wczytajKlienta("Podaj numer telefonu klienta"));
     klient->index = 0;
+    klient->ilosc = 0;
     return klient;
 }
 
@@ -332,7 +344,7 @@ struct klienci *losowyKlient() {
     srand(time(0));
     struct klienci *klient = malloc(sizeof(struct klienci));
     char imie[][MAX] = {"Jan", "Andrzej", "Maria", "Bartosz", "Karol", "Karolina", "Anna", "Pawel", "Tomasz",
-                        "Donald", "Katarzyna", "Gustaw", "Artut"};
+                        "Donald", "Katarzyna", "Gustaw", "Artur"};
     char nazwisko[][MAX] = {"Nowak", "Wojcik", "Kowalczyk", "Wozniak", "Mazur", "Krawczyk", "Kaczmarek", "Zajac",
                             "Stepien", "Wrobel", "Wieczorek", "Krol"};
     char adres[][MAX] = {"ul. Moldawska 75, 61-614 Poznan", "ul. Ciemaly Jozefa 143, 40-862 Katowice",
@@ -352,5 +364,6 @@ struct klienci *losowyKlient() {
     strcpy(klient->telefon, telefon[rand() % 11]);
     klient->next = NULL;
     klient->index = 0;
+    klient->ilosc = 0;
     return klient;
 }

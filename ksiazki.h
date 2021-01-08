@@ -21,10 +21,6 @@ int menuEdycjiKsiazki();
 
 void edytujKsiazke();
 
-void usunRok();
-
-void usunAutora();
-
 struct ksiazki *utworzKsiazke();
 
 struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l);
@@ -222,83 +218,6 @@ void edytujKsiazke() {
                 break;
             default:
                 break;
-        }
-        tmp = ks;
-        fclose(f);
-        f = fopen("../pliki/ksiazki.bin", "wb");
-        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
-            tmp = tmp->next;
-        }
-        uwolnicKsiazki(ks);
-    }
-    fclose(f);
-}
-
-void usunRok() {
-    int max, i = 1, rok;
-    clear();
-    printf("Podaj rok wydania ktory chcesz usunac\n");
-    scanf("%i", &rok);
-    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
-    if (f != NULL) {
-        struct ksiazki *ks = wczytajKsiazki(f, &max);
-        struct ksiazki *tmp = ks;
-        while (tmp && i) {
-            if (tmp->data_wydania == rok) {
-                ks = tmp->next;
-            } else {
-                i = 0;
-            }
-            tmp = tmp->next;
-        }
-        struct ksiazki *prev = ks;
-        tmp = ks;
-        while (tmp) {
-            if (tmp->data_wydania == rok) {
-                prev->next = tmp->next;
-            } else {
-                prev = tmp;
-            }
-            tmp = tmp->next;
-        }
-        tmp = ks;
-        fclose(f);
-        f = fopen("../pliki/ksiazki.bin", "wb");
-        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
-            tmp = tmp->next;
-        }
-        uwolnicKsiazki(ks);
-    }
-    fclose(f);
-}
-
-void usunAutora() {
-    char *s;
-    clear();
-    printf("Podaj nazwisko autora ktorego chcesz usunac\n");
-    s = wczytajString();
-    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
-    int max, i = 1;
-    if (f != NULL) {
-        struct ksiazki *ks = wczytajKsiazki(f, &max);
-        struct ksiazki *tmp = ks;
-        while (tmp && i) {
-            if (strcmp(tmp->autor_nazwisko, s) == 0) {
-                ks = tmp->next;
-            } else {
-                i = 0;
-            }
-            tmp = tmp->next;
-        }
-        struct ksiazki *prev = ks;
-        tmp = ks;
-        while (tmp) {
-            if (strcmp(tmp->autor_nazwisko, s) == 0) {
-                prev->next = tmp->next;
-            } else {
-                prev = tmp;
-            }
-            tmp = tmp->next;
         }
         tmp = ks;
         fclose(f);

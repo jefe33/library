@@ -38,6 +38,69 @@ void uwolnicWyporzyczenia(struct wypozyczenia *w) {
     free(w);
 }
 
+void usunWypozyczenie() {
+    int max, i = 0, nr, nr_klienta;
+    printf("Podaj numer wypozyczenia ktore chcesz usunac\n");
+    scanf("%i", &nr);
+    FILE *f = fopen("../pliki/wypozyczenia.bin", "rb");
+    if (f != NULL) {
+        fseek(f, 0, SEEK_END);
+        if (ftell(f) != 0) {
+            rewind(f);
+            struct wypozyczenia *wyp = wczytajWypozyczenia(f, &max);
+            struct wypozyczenia *tmp = wyp;
+            if (tmp->numer == nr) {
+                nr_klienta = tmp->index_klienta;
+                i = 1;
+                wyp = tmp->next;
+            } else {
+                struct wypozyczenia *prev = wyp;
+                tmp = wyp;
+                while (tmp) {
+                    if (tmp->numer == nr) {
+                        nr_klienta = tmp->index_klienta;
+                        prev->next = tmp->next;
+                        i = 1;
+                        break;
+                    } else {
+                        prev = tmp;
+                    }
+                    tmp = tmp->next;
+                }
+            }
+            if (i) {
+                FILE *f2 = fopen("../pliki/klienci.bin", "rb");
+                if (f2) {
+                    struct klienci *klient = wczytajKlientow(f2, &max);
+                    struct klienci *temp = klient;
+                    while (temp) {
+                        if (temp->index == nr_klienta) {
+                            temp->ilosc -= 1;
+                            break;
+                        }
+                        temp = temp->next;
+                    }
+                    fclose(f2);
+                    f2 = fopen("../pliki/klienci.bin", "wb");
+                    temp = klient;
+                    while (temp && fwrite(temp, sizeof(struct klienci), 1, f2) == 1) {
+                        temp = temp->next;
+                    }
+                    fclose(f2);
+                }
+                tmp = wyp;
+                fclose(f);
+                f = fopen("../pliki/wypozyczenia.bin", "wb");
+                while (tmp && fwrite(tmp, sizeof(struct wypozyczenia), 1, f) == 1) {
+                    tmp = tmp->next;
+                }
+            }
+            uwolnicWyporzyczenia(wyp);
+        }
+    }
+    fclose(f);
+}
+
 void wyswietlWypozyczenia() {
     FILE *f = fopen("../pliki/wypozyczenia.bin", "rb");
     int max;
@@ -45,9 +108,9 @@ void wyswietlWypozyczenia() {
         struct wypozyczenia *wyp = wczytajWypozyczenia(f, &max);
         struct wypozyczenia *tmp = wyp;
         if (tmp != NULL) {
-            printf("-----------------------------------------------\n");
+            printf("---------------------------------------------\n");
             printf("| numer |  index ksiazki  |  index klienta  |\n");
-            printf("-----------------------------------------------\n");
+            printf("---------------------------------------------\n");
             while (tmp) {
                 printf("| %-5i | ", tmp->numer);
                 printf("%-15i | ", tmp->index_ksiazki);
@@ -63,14 +126,17 @@ void wyswietlWypozyczenia() {
 
 void dodajWypozyczenie() {
     int nr, ind, max, i = 1, x;
+    printf("0. Wroc\n");
     printf("1. Dodaj wypozyczenie oraz dodaj klienta\n");
     printf("2. Dodaj wypozyczenie z istniejacym juz w bazie klientem\n");
     scanf("%i", &x);
     if (x == 1) {
         ind = dodajKlienta(0);
-    } else {
+    } else if (x == 2) {
         printf("Podaj numer klienta\n");
         scanf("%i", &ind);
+    } else {
+        return;
     }
     printf("Podaj numer ksiazki\n");
     scanf("%i", &nr);
@@ -106,6 +172,7 @@ void dodajWypozyczenie() {
         struct klienci *tmp2 = kl;
         while (tmp2) {
             if (tmp2->index == ind) {
+                tmp2->ilosc += 1;
                 i = 0;
                 break;
             }
@@ -117,6 +184,12 @@ void dodajWypozyczenie() {
             fclose(f1);
             fclose(f2);
             return;
+        }
+        fclose(f2);
+        f2 = fopen("../pliki/klienci.bin", "wb");
+        tmp2 = kl;
+        while (tmp2 && fwrite(tmp2, sizeof(struct klienci), 1, f2) == 1) {
+            tmp2 = tmp2->next;
         }
         FILE *wyp = fopen("../pliki/wypozyczenia.bin", "rb");
         struct wypozyczenia *wypozyczenie = malloc(sizeof(struct wypozyczenia));
@@ -134,11 +207,11 @@ void dodajWypozyczenie() {
                     tmp->next = wypozyczenie;
                 } else {
                     while (tmp) {
-                        tmp = tmp->next;
-                        if (tmp == NULL) {
+                        if (tmp->next == NULL) {
                             tmp->next = wypozyczenie;
                             break;
                         }
+                        tmp = tmp->next;
                     }
                 }
                 tmp = w1;

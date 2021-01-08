@@ -17,6 +17,10 @@ struct klient {
     struct ksiazki *wypozyczone;
 };
 
+void usunAutora();
+
+void usunRok();
+
 void wyswietlMenu();
 
 void wyswietlMenuKsiazek();
@@ -121,7 +125,7 @@ void wyswietlMenuKlientow() {
                 wyswietlWedlugNazwiska();
                 break;
             case 2:
-                //wyswietlWedlugTytulu();
+                wyswietlWedlugLiczby();
                 break;
             case 3:
                 dodajKlienta(0);
@@ -150,13 +154,109 @@ void wyswietlMenuWypozyczen() {
         printf("3. Wyswietl wypozyczenia\n");
         printf("0. Wroc\n");
         scanf("%d", &x);
-        if (x == 1) {
+        if (x == 0) {
+            wyswietlMenu();
+        } else if (x == 1) {
             dodajWypozyczenie();
         } else if (x == 2) {
-            //
+            usunWypozyczenie();
         } else if (x == 3) {
             wyswietlWypozyczenia();
         }
     } while (x != 0);
 
+}
+
+int czyWypozyczona(struct wypozyczenia *wy, int num) {
+    int i = 0;
+    struct wypozyczenia *tmp2 = wy;
+    while (tmp2) {
+        if (tmp2->index_ksiazki == num) {
+            i = 1;
+            break;
+        }
+        tmp2 = tmp2->next;
+    }
+    return i;
+}
+
+void usunRok() {
+    int max, i = 1, rok;
+    clear();
+    printf("Podaj rok wydania ktory chcesz usunac\n");
+    scanf("%i", &rok);
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    FILE *w = fopen("../pliki/wypozyczenia.bin", "rb");
+    if (f) {
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
+        struct ksiazki *tmp = ks;
+        struct wypozyczenia *wyp = wczytajWypozyczenia(w, &max);
+        while (tmp && i) {
+            if (tmp->data_wydania == rok && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                ks = tmp->next;
+            } else {
+                i = 0;
+            }
+            tmp = tmp->next;
+        }
+        struct ksiazki *prev = ks;
+        tmp = ks->next;
+        while (tmp) {
+            if (tmp->data_wydania == rok && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                prev->next = tmp->next;
+            } else {
+                prev = tmp;
+            }
+            tmp = tmp->next;
+        }
+        tmp = ks;
+        fclose(f);
+        f = fopen("../pliki/ksiazki.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicKsiazki(ks);
+    }
+    fclose(f);
+}
+
+void usunAutora() {
+    char *s;
+    clear();
+    printf("Podaj nazwisko autora ktorego chcesz usunac\n");
+    s = wczytajString();
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    FILE *w = fopen("../pliki/wypozyczenia.bin", "rb");
+    int max, i = 1;
+    if (f != NULL) {
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
+        struct ksiazki *tmp = ks;
+        struct wypozyczenia *wyp = wczytajWypozyczenia(w, &max);
+        while (tmp && i) {
+            if (strcmp(tmp->autor_nazwisko, s) == 0 && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                ks = tmp->next;
+            } else {
+                i = 0;
+            }
+            tmp = tmp->next;
+        }
+        struct ksiazki *prev = ks;
+        tmp = ks->next;
+        while (tmp) {
+            if (strcmp(tmp->autor_nazwisko, s) == 0 && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                prev->next = tmp->next;
+            } else {
+                prev = tmp;
+            }
+            tmp = tmp->next;
+        }
+        tmp = ks;
+        fclose(f);
+        f = fopen("../pliki/ksiazki.bin", "wb");
+        while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+            tmp = tmp->next;
+        }
+        uwolnicKsiazki(ks);
+    }
+    fclose(f);
 }
