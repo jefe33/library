@@ -88,6 +88,25 @@ void usunWypozyczenie() {
                     }
                     fclose(f2);
                 }
+                FILE *f1 = fopen("../pliki/ksiazki.bin", "rb");
+                if (f1) {
+                    struct ksiazki *ks = wczytajKsiazki(f1, &max);
+                    struct ksiazki *temp = ks;
+                    while (temp) {
+                        if (temp->nr_katalogowy == nr_klienta) {
+                            temp->dostepnosc += 1;
+                            break;
+                        }
+                        temp = temp->next;
+                    }
+                    fclose(f1);
+                    f1 = fopen("../pliki/ksiazki.bin", "wb");
+                    temp = ks;
+                    while (temp && fwrite(temp, sizeof(struct ksiazki), 1, f1) == 1) {
+                        temp = temp->next;
+                    }
+                    fclose(f1);
+                }
                 tmp = wyp;
                 fclose(f);
                 f = fopen("../pliki/wypozyczenia.bin", "wb");
@@ -108,13 +127,13 @@ void wyswietlWypozyczenia() {
         struct wypozyczenia *wyp = wczytajWypozyczenia(f, &max);
         struct wypozyczenia *tmp = wyp;
         if (tmp != NULL) {
-            printf("---------------------------------------------\n");
-            printf("| numer |  index ksiazki  |  index klienta  |\n");
-            printf("---------------------------------------------\n");
+            printf("------------------------------------------------\n");
+            printf("  numer        index ksiazki     index klienta  \n");
+            printf("------------------------------------------------\n");
             while (tmp) {
-                printf("| %-5i | ", tmp->numer);
-                printf("%-15i | ", tmp->index_ksiazki);
-                printf("%-15i | ", tmp->index_klienta);
+                printf("%5i  ", tmp->numer);
+                printf("%15i  ", tmp->index_ksiazki);
+                printf("%15i  ", tmp->index_klienta);
                 printf("\n");
                 tmp = tmp->next;
             }
@@ -122,6 +141,13 @@ void wyswietlWypozyczenia() {
         uwolnicWyporzyczenia(wyp);
     } else printf("Brak wypozyczen\n");
     fclose(f);
+}
+
+void czysczenie(FILE *f, FILE *f2, struct ksiazki *ks, struct klienci *kl) {
+    uwolnicKsiazki(ks);
+    uwolnicKlientow(kl);
+    fclose(f);
+    fclose(f2);
 }
 
 void dodajWypozyczenie() {
@@ -145,27 +171,29 @@ void dodajWypozyczenie() {
     if (f1 && f2) {
         struct ksiazki *ks = wczytajKsiazki(f1, &max);
         if (nr > max || nr < 1) {
+            printf("Nie ma ksiazki o takim numerze\n");
+            uwolnicKsiazki(ks);
             fclose(f1);
             return;
         }
         struct klienci *kl = wczytajKlientow(f2, &max);
         if (ind > max || ind < 1) {
-            fclose(f2);
+            printf("Nie ma klienta o takim numerze\n");
+            czysczenie(f1, f2, ks, kl);
             return;
         }
         struct ksiazki *tmp1 = ks;
         while (tmp1) {
-            if (tmp1->nr_katalogowy == nr) {
+            if (tmp1->nr_katalogowy == nr && tmp1->dostepnosc > 0) {
+                tmp1->dostepnosc -= 1;
                 i = 0;
                 break;
             }
             tmp1 = tmp1->next;
         }
         if (i == 1) {
-            uwolnicKsiazki(ks);
-            uwolnicKlientow(kl);
-            fclose(f1);
-            fclose(f2);
+            printf("Nie ma ksiazki o takim numerze lub nie jest dostepna\n");
+            czysczenie(f1, f2, ks, kl);
             return;
         }
         i = 1;
@@ -179,10 +207,8 @@ void dodajWypozyczenie() {
             tmp2 = tmp2->next;
         }
         if (i == 1) {
-            uwolnicKsiazki(ks);
-            uwolnicKlientow(kl);
-            fclose(f1);
-            fclose(f2);
+            printf("Nie ma klienta o takim numerze\n");
+            czysczenie(f1, f2, ks, kl);
             return;
         }
         fclose(f2);
@@ -190,6 +216,12 @@ void dodajWypozyczenie() {
         tmp2 = kl;
         while (tmp2 && fwrite(tmp2, sizeof(struct klienci), 1, f2) == 1) {
             tmp2 = tmp2->next;
+        }
+        fclose(f1);
+        f1 = fopen("../pliki/ksiazki.bin", "wb");
+        tmp1 = ks;
+        while (tmp1 && fwrite(tmp1, sizeof(struct ksiazki), 1, f1) == 1) {
+            tmp1 = tmp1->next;
         }
         FILE *wyp = fopen("../pliki/wypozyczenia.bin", "rb");
         struct wypozyczenia *wypozyczenie = malloc(sizeof(struct wypozyczenia));

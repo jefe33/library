@@ -17,17 +17,15 @@ int is_positive_number(char *s, int len);
 
 void wyswietlK(struct ksiazki *k);
 
+void wyswietlKsiazki(int n);
+
 int menuEdycjiKsiazki();
 
 void edytujKsiazke();
 
 struct ksiazki *utworzKsiazke();
 
-struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l);
-
-void wyswietlWedlugAutora();
-
-void wyswietlWedlugTytulu();
+struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l, int);
 
 struct ksiazki *wstawPosortowane(struct ksiazki *l, struct ksiazki *ks);
 
@@ -117,21 +115,20 @@ int is_positive_number(char *s, int len) {
 
 void wyswietlK(struct ksiazki *k) {
     int i;
-    printf("------------------------------------------------------------------------------------------------------------------------");
-    printf("| nr |         autor         |        tytul              |   kategoria       |wydawnictwo|rok_wyd|numer ISBN|dostepnosc|");
-    printf("------------------------------------------------------------------------------------------------------------------------");
+    printf("-----------------------------------------------------------------------------------------------------------------------\n");
+    printf(" nr       autor                   tytul                       kategoria        wydawnictwo  rok_wyd  numer_ISBN  ilosc\n");
+    printf("-----------------------------------------------------------------------------------------------------------------------\n");
     while (k) {
-        printf("| %-3i|", k->nr_katalogowy);
-        printf(" %-10s ", k->autor_nazwisko);
-        printf("%-10s | ", k->autor_imie);
-        printf("%-25s | ", k->tytul);
-        printf("%-17s |", k->kategoria);
-        printf(" %-11s |", k->wydawnictwo);
-        printf(" %-4i | ", k->data_wydania);
+        printf(" %-3i ", k->nr_katalogowy);
+        printf(" %-24s ", strcat(strcat(k->autor_nazwisko, " "), k->autor_imie));
+        printf(" %-28s ", k->tytul);
+        printf(" %-17s ", k->kategoria);
+        printf(" %-11s ", k->wydawnictwo);
+        printf(" %-4i  ", k->data_wydania);
         for (i = 0; i < 13; ++i) {
             printf("%i", k->nr_isbn[i]);
         }
-        printf(" | %i |\n", k->dostepnosc);
+        printf("  %i \n", k->dostepnosc);
         k = k->next;
     }
 }
@@ -213,8 +210,11 @@ void edytujKsiazke() {
                 }
                 break;
             case 8:
-                printf("Podaj numer dostepnych\n");
-                scanf("%i", &tmp->dostepnosc);
+                do {
+                    printf("Podaj numer dostepnych\n");
+                    scanf("%i", &i);
+                } while (i < 0);
+                tmp->dostepnosc = i;
                 break;
             default:
                 break;
@@ -258,7 +258,7 @@ struct ksiazki *utworzKsiazke() {
     return ksiazka;
 }
 
-struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l) {
+struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l, int n) {
     if (l == NULL || l->next == NULL) {
         return l;
     }
@@ -266,45 +266,50 @@ struct ksiazki *sortowaniePrzezWstawianie(struct ksiazki *l) {
     struct ksiazki *tmp = l;
     struct ksiazki *tmp2;
     struct ksiazki *t = NULL;
-    while (tmp) {
-        t = tmp->next;
-        if (!sorted || strcasecmp(tmp->tytul, sorted->tytul) <= 0) {
-            tmp->next = sorted;
-            sorted = tmp;
-        } else {
-            tmp2 = sorted;
-            while (tmp2->next && strcasecmp(tmp2->next->tytul, tmp->tytul) < 0) {
-                tmp2 = tmp2->next;
+    if (n == 0) {
+        while (tmp) {
+            t = tmp->next;
+            if (!sorted || strcasecmp(tmp->tytul, sorted->tytul) <= 0) {
+                tmp->next = sorted;
+                sorted = tmp;
+            } else {
+                tmp2 = sorted;
+                while (tmp2->next && strcasecmp(tmp2->next->tytul, tmp->tytul) < 0) {
+                    tmp2 = tmp2->next;
+                }
+                tmp->next = tmp2->next;
+                tmp2->next = tmp;
             }
-            tmp->next = tmp2->next;
-            tmp2->next = tmp;
+            tmp = t;
         }
-        tmp = t;
+    } else if (n == 1) {
+        while (tmp) {
+            t = tmp->next;
+            if (!sorted || tmp->dostepnosc > sorted->dostepnosc) {
+                tmp->next = sorted;
+                sorted = tmp;
+            } else {
+                tmp2 = sorted;
+                while (tmp2->next && tmp2->next->dostepnosc > tmp->dostepnosc) {
+                    tmp2 = tmp2->next;
+                }
+                tmp->next = tmp2->next;
+                tmp2->next = tmp;
+            }
+            tmp = t;
+        }
     }
     return sorted;
 }
 
-
-void wyswietlWedlugAutora() {
+void wyswietlKsiazki(int n) {
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
-    int max, i;
+    int max;
     if (f != NULL) {
         struct ksiazki *ks = wczytajKsiazki(f, &max);
-        struct ksiazki *tmp = ks;
-        if (tmp != NULL) {
-            wyswietlK(tmp);
-            uwolnicKsiazki(ks);
-        } else printf("Brak ksiazek\n");
-    } else printf("Brak ksiazek\n");
-    fclose(f);
-}
-
-void wyswietlWedlugTytulu() {
-    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
-    int max, i;
-    if (f != NULL) {
-        struct ksiazki *ks = wczytajKsiazki(f, &max);
-        ks = sortowaniePrzezWstawianie(ks);
+        if (n != 2) {
+            ks = sortowaniePrzezWstawianie(ks, n);
+        }
         struct ksiazki *tmp = ks;
         if (tmp != NULL) {
             wyswietlK(tmp);

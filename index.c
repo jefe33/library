@@ -75,10 +75,13 @@ void wyswietlMenuKsiazek() {
                 wyswietlMenu();
                 break;
             case 1:
-                wyswietlWedlugAutora();
+                wyswietlKsiazki(2);
                 break;
             case 2:
-                wyswietlWedlugTytulu();
+                wyswietlKsiazki(0);
+                break;
+            case 3:
+                wyswietlKsiazki(1);
                 break;
             case 4:
                 dodajKsiazke(0);
@@ -122,10 +125,10 @@ void wyswietlMenuKlientow() {
                 wyswietlMenu();
                 break;
             case 1:
-                wyswietlWedlugNazwiska();
+                wyswietlKlientow(0);
                 break;
             case 2:
-                wyswietlWedlugLiczby();
+                wyswietlKlientow(1);
                 break;
             case 3:
                 dodajKlienta(0);

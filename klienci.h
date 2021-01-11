@@ -14,13 +14,9 @@ char *wczytajKlienta(char *s);
 
 struct klienci *sortowaniePrzezWstawianieKL(struct klienci *l);
 
-void wyswietlKlientow(struct klienci *k);
+void wyswietlKlienta(struct klienci *k);
 
-void wyswietlWedlugLiczby();
-
-void wyswietlWedlugNazwiska();
-
-struct klienci *wstawPosortowanych(struct klienci *l, struct klienci *ks);
+struct klienci *wstawPosortowanychKlientow(struct klienci *, struct klienci *);
 
 struct klienci *utworzKlienta();
 
@@ -146,7 +142,7 @@ void edytujKlienta() {
         }
         struct klienci *p = tmp->next;
         tmp->next = NULL;
-        wyswietlKlientow(tmp);
+        wyswietlKlienta(tmp);
         tmp->next = p;
         x = menuEdycjiKlienta();
         clear();
@@ -214,52 +210,53 @@ struct klienci *sortowaniePrzezWstawianieKL(struct klienci *l) {
     return sorted;
 }
 
-void wyswietlKlientow(struct klienci *k) {
-    printf("------------------------------------------------------------------------------------------------------------------------");
-    printf("| nr |    imie    |    nazwisko     |                  adres                   |     telefon     | ilosc wypozyczonych |");
-    printf("------------------------------------------------------------------------------------------------------------------------");
+void wyswietlKlienta(struct klienci *k) {
+    printf("0.Wroc\n1.Wyswietl wszystkich klientow\n2.Wyswietl klientow wedlug poczatku nazwiska\n");
+    int x;
+    char s[MAX];
+    scanf("%i", &x);
+    if (x == 0) return;
+    else if (x == 2) {
+        clear();
+        printf("Podaj poczatek nazwiska\n");
+        strcpy(s, wczytajString());
+    }
+    printf("-----------------------------------------------------------------------------------------------------------------------\n");
+    printf(" nr    imie          nazwisko                          adres                                telefon         ilosc_wypo \n");
+    printf("-----------------------------------------------------------------------------------------------------------------------\n");
     while (k) {
-        printf("| %-3i| ", k->index);
-        printf("%-10s | ", k->imie);
-        printf("%-15s | ", k->nazwisko);
-        printf("%-40s | ", k->adres);
-        printf("%-16s | ", k->telefon);
-        printf("%-3i  |", k->ilosc);
-        printf("\n");
+        if ((x == 2 && strstr(k->nazwisko, s) == k->nazwisko) || x == 1) {
+            printf(" %-3i  ", k->index);
+            printf(" %-12s ", k->imie);
+            printf("%-17s  ", k->nazwisko);
+            printf("%-50s  ", k->adres);
+            printf("%-16s  ", k->telefon);
+            printf("   %-3i", k->ilosc);
+            printf("\n");
+        }
         k = k->next;
     }
 }
 
-void wyswietlWedlugLiczby() {
+void wyswietlKlientow(int n) {
     FILE *f = fopen("../pliki/klienci.bin", "rb");
-    int max, i;
+    int max;
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
-        kl = sortowaniePrzezWstawianieKL(kl);
+        if (n) {
+            kl = sortowaniePrzezWstawianieKL(kl);
+        }
         struct klienci *tmp = kl;
         if (tmp != NULL) {
-            wyswietlKlientow(tmp);
+            wyswietlKlienta(tmp);
             uwolnicKlientow(kl);
         } else printf("Brak Klientow\n");
     } else printf("Brak Klientow\n");
     fclose(f);
 }
 
-void wyswietlWedlugNazwiska() {
-    FILE *f = fopen("../pliki/klienci.bin", "rb");
-    int max;
-    if (f != NULL) {
-        struct klienci *kl = wczytajKlientow(f, &max);
-        struct klienci *tmp = kl;
-        if (tmp != NULL) {
-            wyswietlKlientow(tmp);
-            uwolnicKlientow(kl);
-        } else printf("Brak klientow\n");
-    } else printf("Brak klientow\n");
-    fclose(f);
-}
 
-struct klienci *wstawPosortowanych(struct klienci *l, struct klienci *kl) {
+struct klienci *wstawPosortowanychKlientow(struct klienci *l, struct klienci *kl) {
     if (strcasecmp(l->nazwisko, kl->nazwisko) > 0) {
         kl->next = l;
         l = kl;
@@ -312,7 +309,7 @@ int dodajKlienta(int n) {
             struct klienci *k2 = wczytajKlientow(f, &max);
             ind = max + 1;
             k1->index = ind;
-            k2 = wstawPosortowanych(k2, k1);
+            k2 = wstawPosortowanychKlientow(k2, k1);
             fclose(f);
             f = fopen(Pklient, "wb");
             struct klienci *tmp = k2;
