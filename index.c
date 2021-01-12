@@ -17,6 +17,8 @@ struct klient {
     struct ksiazki *wypozyczone;
 };
 
+void usunKsiazke();
+
 void usunAutora();
 
 void usunRok();
@@ -54,20 +56,21 @@ void wyswietlMenu() {
 }
 
 void wyswietlMenuKsiazek() {
-    char menu[][100] = {"Wroc\n",
-                        "wyswietl ksiazki posortowane wzgledem autora\n",
-                        "wyswietl ksiazki posortowane wzgledem tytulu\n",
-                        "wyswietl ksiazki posortowane wzgledem dostepnosci\n",
-                        "dodaj ksiazke\n",
-                        "edytuj ksiazke\n",
-                        "skasuj ksiazki wedlug autora\n",
-                        "skasuj ksiazki wedlug roku wydania\n",
-                        "dodaj losowe dane\n",
+    char menu[][100] = {"Wroc",
+                        "wyswietl ksiazki posortowane wzgledem autora",
+                        "wyswietl ksiazki posortowane wzgledem tytulu",
+                        "wyswietl ksiazki posortowane wzgledem dostepnosci",
+                        "dodaj ksiazke",
+                        "edytuj ksiazke",
+                        "usun ksiazke",
+                        "skasuj ksiazki wedlug autora",
+                        "skasuj ksiazki wedlug roku wydania",
+                        "dodaj losowe dane",
     };
     int x;
     do {
-        for (int i = 0; i < 9; ++i) {
-            printf("%i. %s", i, menu[i]);
+        for (int i = 0; i < 10; ++i) {
+            printf("%i. %s\n", i, menu[i]);
         }
         scanf("%d", &x);
         switch (x) {
@@ -90,12 +93,15 @@ void wyswietlMenuKsiazek() {
                 edytujKsiazke();
                 break;
             case 6:
-                usunAutora();
+                usunKsiazke();
                 break;
             case 7:
-                usunRok();
+                usunAutora();
                 break;
             case 8:
+                usunRok();
+                break;
+            case 9:
                 dodajKsiazke(1);
                 break;
             default:
@@ -183,6 +189,57 @@ int czyWypozyczona(struct wypozyczenia *wy, int num) {
     return i;
 }
 
+void usunKsiazke() {
+    int max, i = 0, nr;
+    printf("Podaj numer ksiazki ktora chcesz usunac\n");
+    scanf("%i", &nr);
+    FILE *f = fopen("../pliki/ksiazki.bin", "rb");
+    FILE *w = fopen("../pliki/wypozyczenia.bin", "rb");
+    if (f) {
+        struct ksiazki *ks = wczytajKsiazki(f, &max);
+        struct ksiazki *tmp = ks;
+        struct wypozyczenia *wyp = wczytajWypozyczenia(w, &max);
+        if (tmp->nr_katalogowy == nr) {
+            i = 1;
+            if (czyWypozyczona(wyp, tmp->nr_katalogowy)) {
+                i = 2;
+            } else {
+                ks = tmp->next;
+            }
+        } else {
+            struct ksiazki *prev = ks;
+            tmp = ks;
+            while (tmp) {
+                if (tmp->nr_katalogowy == nr) {
+                    i = 1;
+                    if (czyWypozyczona(wyp, tmp->nr_katalogowy)) {
+                        i = 2;
+                    } else {
+                        prev->next = tmp->next;
+                    }
+                    break;
+                } else {
+                    prev = tmp;
+                }
+                tmp = tmp->next;
+            }
+        }
+        if (i == 1) {
+            tmp = ks;
+            fclose(f);
+            f = fopen("../pliki/ksiazki.bin", "wb");
+            while (tmp && fwrite(tmp, sizeof(struct ksiazki), 1, f) == 1) {
+                tmp = tmp->next;
+            }
+        } else if (i == 2) {
+            printf("Nie mozna usunac ksiazki bo jest wypozyczona\n");
+        }
+        uwolnicKsiazki(ks);
+        uwolnicWyporzyczenia(wyp);
+    }
+    fclose(f);
+}
+
 void usunRok() {
     int max, i = 1, rok;
     clear();
@@ -219,6 +276,7 @@ void usunRok() {
             tmp = tmp->next;
         }
         uwolnicKsiazki(ks);
+        uwolnicWyporzyczenia(wyp);
     }
     fclose(f);
 }
@@ -260,6 +318,7 @@ void usunAutora() {
             tmp = tmp->next;
         }
         uwolnicKsiazki(ks);
+        uwolnicWyporzyczenia(wyp);
     }
     fclose(f);
 }
