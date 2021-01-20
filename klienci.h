@@ -62,17 +62,19 @@ void uwolnicKlientow(struct klienci *t) {
 void usunKlienta() {
     int max, i = 0, nr;
     printf("Podaj numer klienta ktorego chcesz usunac\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/klienci.bin", "rb");
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
         struct klienci *tmp = kl;
+        struct klienci *tmp2 = NULL;
         if (tmp->index == nr) {
             i = 1;
             if (tmp->ilosc > 0) {
                 i = 2;
             } else {
                 kl = tmp->next;
+                free(tmp);
             }
         } else {
             struct klienci *prev = kl;
@@ -83,7 +85,9 @@ void usunKlienta() {
                     if (tmp->ilosc > 0) {
                         i = 2;
                     } else {
+                        tmp2 = prev->next;
                         prev->next = tmp->next;
+                        free(tmp2);
                     }
                     break;
                 } else {
@@ -119,7 +123,7 @@ void edytujKlienta() {
     int max, i = 1, nr, x;
     clear();
     printf("Podaj numer klienta ktorego chcesz edytowac\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/klienci.bin", "rb");
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
@@ -214,7 +218,7 @@ void wyswietlKlienta(struct klienci *k) {
     printf("0.Wroc\n1.Wyswietl wszystkich klientow\n2.Wyswietl klientow wedlug poczatku nazwiska\n");
     int x;
     char s[MAX];
-    scanf("%i", &x);
+    if (scanf("%i", &x) == 0) return;
     if (x == 0) return;
     else if (x == 2) {
         clear();

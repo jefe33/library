@@ -42,8 +42,8 @@ void wyswietlMenu() {
     printf("3. Menu wypozyczen\n");
     printf("0. Wyjscie z programu\n");
     int x;
-    scanf("%d", &x);
-    if (x == 0);
+    if (scanf("%d", &x) == 0) return;
+    if (x == 0) return;
     else if (x == 1) {
         wyswietlMenuKsiazek();
     } else if (x == 2) {
@@ -72,7 +72,7 @@ void wyswietlMenuKsiazek() {
         for (int i = 0; i < 10; ++i) {
             printf("%i. %s\n", i, menu[i]);
         }
-        scanf("%d", &x);
+        if (scanf("%d", &x) == 0) break;
         switch (x) {
             case 0:
                 wyswietlMenu();
@@ -125,7 +125,7 @@ void wyswietlMenuKlientow() {
         for (int i = 0; i < 7; ++i) {
             printf("\n%i. %s", i, menu[i]);
         }
-        scanf("%d", &x);
+        if (scanf("%d", &x) == 0) break;
         switch (x) {
             case 0:
                 wyswietlMenu();
@@ -162,7 +162,7 @@ void wyswietlMenuWypozyczen() {
         printf("2. Usun wypozyczenie\n");
         printf("3. Wyswietl wypozyczenia\n");
         printf("0. Wroc\n");
-        scanf("%d", &x);
+        if (scanf("%d", &x) == 0) break;
         if (x == 0) {
             wyswietlMenu();
         } else if (x == 1) {
@@ -192,7 +192,7 @@ int czyWypozyczona(struct wypozyczenia *wy, int num) {
 void usunKsiazke() {
     int max, i = 0, nr;
     printf("Podaj numer ksiazki ktora chcesz usunac\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     FILE *w = fopen("../pliki/wypozyczenia.bin", "rb");
     if (f) {
@@ -205,6 +205,7 @@ void usunKsiazke() {
                 i = 2;
             } else {
                 ks = tmp->next;
+                free(tmp);
             }
         } else {
             struct ksiazki *prev = ks;
@@ -215,7 +216,9 @@ void usunKsiazke() {
                     if (czyWypozyczona(wyp, tmp->nr_katalogowy)) {
                         i = 2;
                     } else {
+                        struct ksiazki *tmp2 = prev->next;
                         prev->next = tmp->next;
+                        free(tmp2);
                     }
                     break;
                 } else {
@@ -237,6 +240,7 @@ void usunKsiazke() {
         uwolnicKsiazki(ks);
         uwolnicWyporzyczenia(wyp);
     }
+    fclose(w);
     fclose(f);
 }
 
@@ -244,30 +248,37 @@ void usunRok() {
     int max, i = 1, rok;
     clear();
     printf("Podaj rok wydania ktory chcesz usunac\n");
-    scanf("%i", &rok);
+    if (scanf("%i", &rok) == 0) return;
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     FILE *w = fopen("../pliki/wypozyczenia.bin", "rb");
     if (f) {
         struct ksiazki *ks = wczytajKsiazki(f, &max);
         struct ksiazki *tmp = ks;
+        struct ksiazki *tmp2 = NULL;
         struct wypozyczenia *wyp = wczytajWypozyczenia(w, &max);
         while (tmp && i) {
             if (tmp->data_wydania == rok && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                tmp2 = tmp;
                 ks = tmp->next;
+                tmp = ks;
+                free(tmp2);
             } else {
                 i = 0;
             }
-            tmp = tmp->next;
+
         }
         struct ksiazki *prev = ks;
         tmp = ks->next;
         while (tmp) {
             if (tmp->data_wydania == rok && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                tmp2 = prev->next;
                 prev->next = tmp->next;
+                tmp = tmp->next;
+                free(tmp2);
             } else {
                 prev = tmp;
+                tmp = tmp->next;
             }
-            tmp = tmp->next;
         }
         tmp = ks;
         fclose(f);
@@ -278,6 +289,7 @@ void usunRok() {
         uwolnicKsiazki(ks);
         uwolnicWyporzyczenia(wyp);
     }
+    fclose(w);
     fclose(f);
 }
 
@@ -292,10 +304,14 @@ void usunAutora() {
     if (f != NULL) {
         struct ksiazki *ks = wczytajKsiazki(f, &max);
         struct ksiazki *tmp = ks;
+        struct ksiazki *tmp2 = NULL;
         struct wypozyczenia *wyp = wczytajWypozyczenia(w, &max);
         while (tmp && i) {
             if (strcmp(tmp->autor_nazwisko, s) == 0 && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                tmp2 = tmp;
                 ks = tmp->next;
+                tmp = ks;
+                free(tmp2);
             } else {
                 i = 0;
             }
@@ -305,11 +321,14 @@ void usunAutora() {
         tmp = ks->next;
         while (tmp) {
             if (strcmp(tmp->autor_nazwisko, s) == 0 && czyWypozyczona(wyp, tmp->nr_katalogowy) == 0) {
+                tmp2 = prev->next;
                 prev->next = tmp->next;
+                tmp = tmp->next;
+                free(tmp2);
             } else {
                 prev = tmp;
+                tmp = tmp->next;
             }
-            tmp = tmp->next;
         }
         tmp = ks;
         fclose(f);
@@ -320,5 +339,6 @@ void usunAutora() {
         uwolnicKsiazki(ks);
         uwolnicWyporzyczenia(wyp);
     }
+    fclose(w);
     fclose(f);
 }

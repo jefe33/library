@@ -1,0 +1,17 @@
+Kacper Świderek grupa PS:19 
+Biblioteka
+struct ksiazki {
+    unsigned int nr_isbn[13];
+    int nr_katalogowy, dostepnosc, data_wydania;
+    char autor_nazwisko[MAX], autor_imie[MAX], tytul[MAX], kategoria[MAX], wydawnictwo[MAX];
+    struct ksiazki *next;
+};
+struct klienci {
+    int index, ilosc;
+    char nazwisko[MAX], imie[MAX], adres[MAX], telefon[MAX];
+    struct klienci *next;
+};
+struct wypozyczenia {
+    int numer, index_ksiazki, index_klienta;
+    struct wypozyczenia *next;
+};

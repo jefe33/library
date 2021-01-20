@@ -41,26 +41,30 @@ void uwolnicWyporzyczenia(struct wypozyczenia *w) {
 void usunWypozyczenie() {
     int max, i = 0, nr, nr_klienta;
     printf("Podaj numer wypozyczenia ktore chcesz usunac\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/wypozyczenia.bin", "rb");
-    if (f != NULL) {
+    if (f) {
         fseek(f, 0, SEEK_END);
         if (ftell(f) != 0) {
             rewind(f);
             struct wypozyczenia *wyp = wczytajWypozyczenia(f, &max);
             struct wypozyczenia *tmp = wyp;
+            struct wypozyczenia *tmp2 = NULL;
             if (tmp->numer == nr) {
                 nr_klienta = tmp->index_klienta;
                 i = 1;
                 wyp = tmp->next;
+                free(tmp);
             } else {
                 struct wypozyczenia *prev = wyp;
-                tmp = wyp;
+                tmp = wyp->next;
                 while (tmp) {
                     if (tmp->numer == nr) {
                         nr_klienta = tmp->index_klienta;
+                        tmp2 = prev->next;
                         prev->next = tmp->next;
                         i = 1;
+                        free(tmp2);
                         break;
                     } else {
                         prev = tmp;
@@ -160,12 +164,12 @@ void dodajWypozyczenie() {
         ind = dodajKlienta(0);
     } else if (x == 2) {
         printf("Podaj numer klienta\n");
-        scanf("%i", &ind);
+        if (scanf("%i", &ind) == 0) return;
     } else {
         return;
     }
     printf("Podaj numer ksiazki\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f1 = fopen("../pliki/ksiazki.bin", "rb");
     FILE *f2 = fopen("../pliki/klienci.bin", "rb");
     if (f1 && f2) {

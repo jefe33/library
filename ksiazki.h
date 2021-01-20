@@ -137,7 +137,7 @@ int menuEdycjiKsiazki() {
     printf("0.Wroc\n1.Zmien tytul ksiazki\n2.Zmien nazwisko autora ksiazki\n3.Zmien imie autora ksiazki\n"
            "4.Zmien kategorie ksiazki\n5.Zmien wydawnictwo ksiazki\n6.Zmien rok wydania ksiazki\n7.Zmien numer ISBN\n8.Zmien dostepnosc\n");
     int x;
-    scanf("%d", &x);
+    if (scanf("%i", &x) == 0) return 0;
     return x;
 }
 
@@ -145,7 +145,7 @@ void edytujKsiazke() {
     int max, i = 1, nr, x;
     clear();
     printf("Podaj numer katalogowy ksiazki ktora chcesz edytowac\n");
-    scanf("%i", &nr);
+    if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
     if (f != NULL) {
         struct ksiazki *ks = wczytajKsiazki(f, &max);
@@ -195,7 +195,7 @@ void edytujKsiazke() {
             case 6:
                 do {
                     printf("Podaj rok wydania\n");
-                    scanf("%i", &i);
+                    if (scanf("%i", &i) == 0) i = 0;
                 } while (i < 1000 || i > 9999);
                 tmp->data_wydania = i;
                 break;
@@ -212,7 +212,7 @@ void edytujKsiazke() {
             case 8:
                 do {
                     printf("Podaj numer dostepnych\n");
-                    scanf("%i", &i);
+                    if (scanf("%i", &i) == 0) i = 0;
                 } while (i < 0);
                 tmp->dostepnosc = i;
                 break;
@@ -242,7 +242,7 @@ struct ksiazki *utworzKsiazke() {
     strcpy(ksiazka->wydawnictwo, wczytajKsiazka("Podaj wydawnictwo ksiazki"));
     do {
         printf("Podaj rok wydania\n");
-        scanf("%i", &x);
+        if (scanf("%i", &x) == 0) x = 0;
     } while (x < 1000 || x > 9999);
     ksiazka->data_wydania = x;
     ksiazka->dostepnosc = 1;
