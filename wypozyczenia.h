@@ -6,23 +6,18 @@ struct wypozyczenia {
 struct wypozyczenia *wczytajWypozyczenia(FILE *in_stream, int *max) {
     *max = 0;
     struct wypozyczenia head;
-    head.next = NULL; // code only uses the `next` field of head
+    head.next = NULL;
 
     struct wypozyczenia *previous = &head;
     struct wypozyczenia x;
 
-    // While another record was successfully read ...
     while (fread(&x, sizeof(struct wypozyczenia), 1, in_stream) == 1) {
-        // Fill the next field
         if (x.numer > *max) *max = x.numer;
         x.next = NULL;
 
-        // Allocate space and copy
         previous->next = malloc(sizeof *(previous->next));
-        //assert(previous->next);
         *(previous->next) = x;
 
-        // Advance to the next
         previous = previous->next;
     }
     return head.next;
@@ -35,7 +30,6 @@ void uwolnicWyporzyczenia(struct wypozyczenia *w) {
         w = w->next;
         free(tmp);
     }
-    free(w);
 }
 
 void usunWypozyczenie() {

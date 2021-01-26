@@ -36,23 +36,18 @@ void dodajKsiazke(int);
 struct ksiazki *wczytajKsiazki(FILE *in_stream, int *max) {
     *max = 0;
     struct ksiazki head;
-    head.next = NULL; // code only uses the `next` field of head
+    head.next = NULL;
 
     struct ksiazki *previous = &head;
     struct ksiazki x;
 
-    // While another record was successfully read ...
     while (fread(&x, sizeof(struct ksiazki), 1, in_stream) == 1) {
-        // Fill the next field
         if (x.nr_katalogowy > *max) *max = x.nr_katalogowy;
         x.next = NULL;
 
-        // Allocate space and copy
         previous->next = malloc(sizeof *(previous->next));
-        //assert(previous->next);
         *(previous->next) = x;
 
-        // Advance to the next
         previous = previous->next;
     }
     return head.next;
@@ -74,7 +69,6 @@ void uwolnicKsiazki(struct ksiazki *t) {
         t = t->next;
         free(tmp);
     }
-    free(t);
 }
 
 void clear() {
@@ -147,9 +141,10 @@ void edytujKsiazke() {
     printf("Podaj numer katalogowy ksiazki ktora chcesz edytowac\n");
     if (scanf("%i", &nr) == 0) return;
     FILE *f = fopen("../pliki/ksiazki.bin", "rb");
-    if (f != NULL) {
+    if (f) {
         struct ksiazki *ks = wczytajKsiazki(f, &max);
         if (nr > max || nr < 1) {
+            uwolnicKsiazki(ks);
             fclose(f);
             return;
         }

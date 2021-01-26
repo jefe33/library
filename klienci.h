@@ -27,23 +27,18 @@ struct klienci *losowyKlient();
 struct klienci *wczytajKlientow(FILE *in_stream, int *max) {
     *max = 0;
     struct klienci head;
-    head.next = NULL; // code only uses the `next` field of head
+    head.next = NULL;
 
     struct klienci *previous = &head;
     struct klienci x;
 
-    // While another record was successfully read ...
     while (fread(&x, sizeof(struct klienci), 1, in_stream) == 1) {
-        // Fill the next field
         if (x.index > *max) *max = x.index;
         x.next = NULL;
 
-        // Allocate space and copy
         previous->next = malloc(sizeof *(previous->next));
-        //assert(previous->next);
         *(previous->next) = x;
 
-        // Advance to the next
         previous = previous->next;
     }
     return head.next;
@@ -56,7 +51,6 @@ void uwolnicKlientow(struct klienci *t) {
         t = t->next;
         free(tmp);
     }
-    free(t);
 }
 
 void usunKlienta() {
@@ -128,6 +122,7 @@ void edytujKlienta() {
     if (f != NULL) {
         struct klienci *kl = wczytajKlientow(f, &max);
         if (nr > max || nr < 1) {
+            uwolnicKlientow(kl);
             fclose(f);
             return;
         }
