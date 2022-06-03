@@ -1,4 +1,0 @@
-"D:\programy\CLion 2020.2.4\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" "C:\Users\user\Desktop\programy\programy c\Projekt"
--- Configuring done
--- Generating done
--- Build files have been written to: C:/Users/user/Desktop/programy/programy c/Projekt/cmake-build-debug

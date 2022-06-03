@@ -1,35 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include "index.h"
 
-#define MAX 50
-
-#include "ksiazki.h"
-#include "klienci.h"
-#include "wypozyczenia.h"
-
-struct klient {
-    int telefon;
-    char *imie, *nazwisko, *adres;
-    struct ksiazki *wypozyczone;
-};
-
-void usunKsiazke();
-
-void usunAutora();
-
-void usunRok();
-
-void wyswietlMenu();
-
-void wyswietlMenuKsiazek();
-
-void wyswietlMenuKlientow();
-
-void wyswietlMenuWypozyczen();
 
 int main() {
     wyswietlMenu();
